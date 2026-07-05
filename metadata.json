@@ -1,0 +1,6 @@
+{
+  "name": "Personal Notes",
+  "description": "A high-quality, digital-stationery style note-taking app optimized for tablet screens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
