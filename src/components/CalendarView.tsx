@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { Note, Group } from '../types';
 
+export const clampDayToMonth = (day: number, year: number, monthIndex: number) =>
+  Math.min(day, new Date(year, monthIndex + 1, 0).getDate());
+
 interface CalendarViewProps {
   notes: Note[];
   groups: Group[];
@@ -78,8 +81,9 @@ export default function CalendarView({
   };
 
   const moveMonth = (offset: number) => {
-    setViewMonth(new Date(year, monthIndex + offset, 1));
-    setSelectedDay(1);
+    const targetMonth = new Date(year, monthIndex + offset, 1);
+    setViewMonth(targetMonth);
+    setSelectedDay((day) => clampDayToMonth(day, targetMonth.getFullYear(), targetMonth.getMonth()));
   };
 
   const moveToToday = () => {

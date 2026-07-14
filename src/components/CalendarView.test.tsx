@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import CalendarView from './CalendarView';
+import CalendarView, { clampDayToMonth } from './CalendarView';
 
 const renderCalendar = (date: Date) => {
   vi.setSystemTime(date);
@@ -29,5 +29,19 @@ describe('CalendarView current date', () => {
 
     expect(markup).toContain(monthLabel);
     expect(markup).toContain(dayLabel);
+  });
+});
+
+describe('CalendarView month navigation', () => {
+  it('keeps the selected day when it exists in the target month', () => {
+    expect(clampDayToMonth(15, 2026, 7)).toBe(15);
+  });
+
+  it('clamps the selected day for a shorter target month', () => {
+    expect(clampDayToMonth(31, 2026, 1)).toBe(28);
+  });
+
+  it('keeps leap day in a leap year', () => {
+    expect(clampDayToMonth(29, 2028, 1)).toBe(29);
   });
 });
