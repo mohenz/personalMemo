@@ -19,6 +19,8 @@
   
   --color-background: #ffffff;
   --color-on-background: #191c1e;
+  --color-text-primary: #222222;
+  --color-text-secondary: #666666;
 
   --color-surface: #F4F6F8;
   --color-surface-dim: #d8dadc;
@@ -53,6 +55,8 @@
 
   --color-background: #0b0f19;
   --color-on-background: #f8fafc;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
 
   --color-surface: #172134;
   --color-surface-dim: #070a12;
@@ -96,8 +100,8 @@
   }
 
   .notebook-pattern {
-    background-image: linear-gradient(rgba(0, 88, 190, 0.08) 1px, transparent 1px);
-    background-size: 100% 28px;
+    background-image: linear-gradient(rgba(229, 231, 235, 0.95) 1px, transparent 1px);
+    background-size: 100% 24px;
     background-attachment: local;
   }
 
@@ -107,9 +111,9 @@
 
   .notebook-grid {
     background-image: 
-      linear-gradient(rgba(0, 88, 190, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 88, 190, 0.06) 1px, transparent 1px);
-    background-size: 28px 28px;
+      linear-gradient(rgba(229, 231, 235, 0.9) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(229, 231, 235, 0.9) 1px, transparent 1px);
+    background-size: 24px 24px;
     background-position: center top;
   }
 
@@ -120,7 +124,7 @@
   }
 
   .shadow-soft {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .dark .shadow-soft {
@@ -128,7 +132,7 @@
   }
 
   .notebook-shadow {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .dark .notebook-shadow {

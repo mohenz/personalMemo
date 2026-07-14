@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { FileText, Tablet } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 interface SplashViewProps {
   onComplete: () => void;
@@ -42,8 +42,7 @@ export default function SplashView({ onComplete }: SplashViewProps) {
         <h1 className="font-sans text-3xl font-bold text-primary tracking-tight mb-2">
           Personal Notes
         </h1>
-        <p className="font-sans text-xs text-text-secondary tracking-widest uppercase font-semibold">
-          Digital Stationery
+        <p className="font-sans text-xs text-text-secondary tracking-widest uppercase font-semibold">         
         </p>
       </div>
 
@@ -54,11 +53,6 @@ export default function SplashView({ onComplete }: SplashViewProps) {
           <div className="loading-bar h-full w-full" />
         </div>
         
-        {/* Platform Identity */}
-        <div className="flex items-center gap-2 opacity-40">
-          <Tablet className="w-4.5 h-4.5 text-on-surface" />
-          <span className="font-sans text-sm font-medium">Galaxy Tab Optimized</span>
-        </div>
       </div>
 
       {/* Background Atmospheric Elements */}

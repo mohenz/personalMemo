@@ -71,8 +71,8 @@ export default function CalendarView({
     <div className="flex-1 flex flex-col h-full bg-background select-none relative">
       
       {/* Top Calendar Header Controls */}
-      <header className="sticky top-0 w-full flex justify-between items-center px-8 h-16 z-20 bg-background/80 backdrop-blur-md border-b border-grid-line">
-        <div className="flex items-center gap-6">
+      <header className="sticky top-0 w-full flex flex-col md:flex-row justify-between gap-3 md:items-center px-4 md:px-8 py-3 md:h-16 z-20 bg-background/80 backdrop-blur-md border-b border-grid-line">
+        <div className="flex items-center gap-4 md:gap-6">
           <span className="font-sans text-xl font-bold text-on-background">2026년 7월</span>
           
           <div className="flex items-center bg-surface-container rounded-full p-1">
@@ -92,13 +92,13 @@ export default function CalendarView({
         </div>
 
         {/* Search & Actions block */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
             <input 
               type="text" 
               placeholder="일정 검색..."
-              className="bg-surface border-none rounded-xl h-10 pl-9 pr-4 w-48 focus:outline-none focus:ring-2 focus:ring-primary transition-all text-xs font-medium text-on-surface placeholder:text-outline"
+              className="bg-surface border border-transparent rounded-xl h-10 pl-9 pr-4 w-48 focus:outline-none focus:ring-2 focus:ring-primary transition-all text-xs font-medium text-on-surface placeholder:text-outline"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -115,11 +115,11 @@ export default function CalendarView({
       </header>
 
       {/* 2-Pane Content: Monthly Grid (Left) & Selected Day Sidebar (Right) */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col xl:flex-row min-h-0 overflow-hidden">
         
         {/* Left Side: Calendar Grid */}
-        <div className="flex-1 p-6 overflow-y-auto no-scrollbar">
-          <div className="bg-surface-container-lowest rounded-2xl notebook-shadow border border-grid-line overflow-hidden">
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto no-scrollbar">
+          <div className="bg-surface-container-lowest rounded-xl notebook-shadow border border-grid-line overflow-hidden min-w-[720px] xl:min-w-0">
             
             {/* Day of Week Header row */}
             <div className="grid grid-cols-7 border-b border-grid-line bg-surface-container-low text-xs font-bold py-3 text-center text-on-surface-variant">
@@ -216,7 +216,7 @@ export default function CalendarView({
         </div>
 
         {/* Right Side: Selected Day Summary list panel */}
-        <aside className="w-[360px] border-l border-grid-line bg-surface-container-low flex flex-col shrink-0">
+        <aside className="w-full xl:w-[360px] max-h-[38vh] xl:max-h-none border-t xl:border-t-0 xl:border-l border-grid-line bg-surface-container-low flex flex-col shrink-0">
           <div className="p-6 flex flex-col h-full justify-between gap-4">
             
             <div className="space-y-4 overflow-y-auto custom-scrollbar pr-1 flex-1">
@@ -242,7 +242,7 @@ export default function CalendarView({
                       <div 
                         key={note.id}
                         onClick={() => onSelectNote(note.id)}
-                        className="bg-surface-container-lowest p-4 rounded-xl notebook-shadow border border-transparent hover:border-primary transition-all cursor-pointer group flex flex-col gap-2"
+                        className="bg-surface-container-lowest p-4 rounded-xl shadow-soft border border-transparent hover:border-primary transition-all cursor-pointer group flex flex-col gap-2"
                       >
                         <div className="flex justify-between items-start">
                           <h3 className="font-sans text-sm font-bold text-primary group-hover:text-primary-container truncate flex-1">
@@ -291,7 +291,7 @@ export default function CalendarView({
       {/* Floating Action Button (FAB) */}
       <button 
         onClick={() => onAddNoteWithDate(getFormattedDateString(selectedDay))}
-        className="absolute bottom-8 right-[384px] w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30 cursor-pointer"
+        className="hidden xl:flex absolute bottom-8 right-[384px] w-14 h-14 bg-primary text-white rounded-xl shadow-2xl items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30 cursor-pointer"
         title="새 메모"
       >
         <Edit3 className="w-5 h-5 text-white stroke-[2]" />

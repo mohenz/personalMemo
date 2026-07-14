@@ -24,4 +24,4 @@ export interface Note {
   checklist: ChecklistItem[];
 }
 
-export type ScreenType = 'SPLASH' | 'DASHBOARD' | 'EDITOR' | 'SEARCH' | 'CALENDAR';
+export type ScreenType = 'SPLASH' | 'DASHBOARD' | 'EDITOR' | 'SEARCH' | 'CALENDAR' | 'ARCHIVE';

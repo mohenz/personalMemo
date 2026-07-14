@@ -1,24 +1,21 @@
 import React, { useState } from 'react';
-import { X, Sun, Moon, Check, Image as ImageIcon, User, Sparkles, Upload, Download, Smartphone } from 'lucide-react';
-import { PREMIUM_IMAGES } from '../data';
+import { X, Sun, Moon, Check, User, Sparkles, Upload, Download, Smartphone, Cloud, LogOut } from 'lucide-react';
 
 interface SettingsModalProps {
   onClose: () => void;
   profileImage: string;
-  onUpdateProfileImage: (url: string) => void;
+  onUpdateProfileImage: (file: File) => Promise<void>;
   darkMode: boolean;
   onToggleDarkMode: (enabled: boolean) => void;
+  archiveUserEmail: string;
+  archiveStatus: string;
+  firebaseConfigured: boolean;
+  onArchiveLogin: (email: string, password: string) => Promise<void>;
+  onArchiveLogout: () => Promise<void>;
+  onArchivePasswordReset: (email: string) => Promise<void>;
   isInstallable?: boolean;
   onInstall?: () => void;
 }
-
-const PRESET_AVATARS = [
-  { name: '기본 크리에이티브', url: PREMIUM_IMAGES.userProfile },
-  { name: '세련된 프로페셔널', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80' },
-  { name: '미니멀 엔지니어', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80' },
-  { name: '스마트 이노베이터', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80' },
-  { name: '소프트 아티스트', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80' },
-];
 
 export default function SettingsModal({
   onClose,
@@ -26,21 +23,34 @@ export default function SettingsModal({
   onUpdateProfileImage,
   darkMode,
   onToggleDarkMode,
+  archiveUserEmail,
+  archiveStatus,
+  firebaseConfigured,
+  onArchiveLogin,
+  onArchiveLogout,
+  onArchivePasswordReset,
   isInstallable,
   onInstall
 }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'theme'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'archive' | 'theme'>('profile');
   const [dragOver, setDragOver] = useState(false);
+  const [archiveEmail, setArchiveEmail] = useState('');
+  const [archivePassword, setArchivePassword] = useState('');
+  const [profileStatus, setProfileStatus] = useState('');
 
-  const handleFileChange = (file: File | undefined) => {
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          onUpdateProfileImage(event.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+  const handleFileChange = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setProfileStatus('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    setProfileStatus('프로필 이미지를 저장하는 중입니다.');
+    try {
+      await onUpdateProfileImage(file);
+      setProfileStatus('프로필 이미지가 저장되었습니다.');
+    } catch (error) {
+      setProfileStatus(error instanceof Error ? error.message : '프로필 이미지 저장에 실패했습니다.');
     }
   };
 
@@ -92,6 +102,17 @@ export default function SettingsModal({
             <Sun className="w-4 h-4" />
             <span>화면 테마 설정</span>
           </button>
+          <button
+            onClick={() => setActiveTab('archive')}
+            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+              activeTab === 'archive'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <Cloud className="w-4 h-4" />
+            <span>자료실 계정</span>
+          </button>
         </div>
 
         {/* Tab Contents */}
@@ -113,46 +134,8 @@ export default function SettingsModal({
                 <p className="text-xs text-outline font-medium">상단 사이드바에 표시되는 프로필 사진입니다.</p>
               </div>
 
-              {/* Preset Avatars Grid */}
-              <div className="space-y-3">
-                <span className="text-xs font-extrabold text-on-surface-variant uppercase tracking-wider block">
-                  프리미엄 아바타 선택
-                </span>
-                <div className="grid grid-cols-5 gap-3">
-                  {PRESET_AVATARS.map((avatar, idx) => {
-                    const isSelected = profileImage === avatar.url;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => onUpdateProfileImage(avatar.url)}
-                        className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all hover:scale-105 ${
-                          isSelected 
-                            ? 'border-primary ring-2 ring-primary/20 shadow-md' 
-                            : 'border-outline-variant/50 dark:border-outline/30 hover:border-primary'
-                        }`}
-                        title={avatar.name}
-                      >
-                        <img 
-                          src={avatar.url} 
-                          alt={avatar.name} 
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                        {isSelected && (
-                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                            <div className="bg-primary text-white p-1 rounded-full shadow-md">
-                              <Check className="w-3 h-3 stroke-[3]" />
-                            </div>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Custom Gallery Upload */}
-              <div className="border-t border-grid-line dark:border-outline/10 pt-4 space-y-3">
+              <div className="space-y-3">
                 <span className="text-xs font-extrabold text-on-surface-variant uppercase tracking-wider block">
                   갤러리에서 이미지 업로드
                 </span>
@@ -197,6 +180,7 @@ export default function SettingsModal({
                     <p className="text-[11px] text-outline mt-1">PNG, JPG, GIF, WebP 지원 (최대 5MB 권장)</p>
                   </div>
                 </div>
+                {profileStatus && <p className="text-xs font-semibold text-primary">{profileStatus}</p>}
               </div>
 
             </div>
@@ -260,7 +244,7 @@ export default function SettingsModal({
 
               {/* Dynamic notice describing dark theme features */}
               <div className="p-4 bg-surface dark:bg-surface-container-lowest rounded-2xl border border-outline-variant/30 text-xs text-on-surface-variant leading-relaxed">
-                <span className="font-bold text-primary block mb-1">💡 똑똑한 다크 모드 탑재</span>
+                <span className="font-bold text-primary block mb-1">다크 모드</span>
                 어둡게 보기를 켜면 종이 질감 격자 무늬의 농도와 선 색상이 어두운 밤하늘 테마에 맞춰 안전하게 조절됩니다.
               </div>
 
@@ -291,13 +275,91 @@ export default function SettingsModal({
                   </div>
                 ) : (
                   <div className="p-4 bg-surface dark:bg-surface-container-lowest rounded-2xl border border-outline-variant/30 text-xs text-on-surface-variant leading-relaxed">
-                    <span className="font-bold text-primary block mb-1">📲 설치 안내 (전용 앱 사용)</span>
-                    <p className="mb-2">브라우저의 주소창 오른쪽 <strong className="text-on-background">‘앱 설치’</strong> 버튼을 누르거나, iOS Safari의 경우 <strong className="text-on-background">‘공유하기’ ➜ ‘홈 화면에 추가’</strong>를 클릭하시면 바탕화면에 설치해 편하게 독립 실행형으로 활용하실 수 있습니다.</p>
-                    <div className="text-[10px] text-outline font-semibold">✓ 오프라인 데이터 완벽 보존 / 독립된 태블릿 최적화 레이아웃 지원</div>
+                    <span className="font-bold text-primary block mb-1">설치 안내</span>
+                    <p className="mb-2">브라우저의 주소창 오른쪽 <strong className="text-on-background">‘앱 설치’</strong> 버튼을 누르거나, iOS Safari의 경우 <strong className="text-on-background">‘공유하기’에서 ‘홈 화면에 추가’</strong>를 선택하면 독립 실행형으로 사용할 수 있습니다.</p>
+                    <div className="text-[10px] text-outline font-semibold">오프라인 데이터 보존 / 태블릿 최적화 레이아웃 지원</div>
                   </div>
                 )}
               </div>
 
+            </div>
+          )}
+
+          {activeTab === 'archive' && (
+            <div className="space-y-5">
+              <div className="p-4 bg-surface dark:bg-surface-container-lowest rounded-2xl border border-outline-variant/30 text-xs text-on-surface-variant leading-relaxed">
+                <span className="font-bold text-primary block mb-1">자료실 통합</span>
+                같은 Firebase 계정으로 메모, 폴더, 테마, 첨부 이미지를 자료실 백엔드에 저장합니다.
+              </div>
+
+              {!firebaseConfigured && (
+                <div className="p-4 rounded-2xl border border-error/30 bg-red-50 text-xs text-error font-semibold">
+                  Firebase 환경변수가 설정되지 않았습니다. 자료실과 같은 `VITE_FIREBASE_*` 값을 personalMemo에 설정해야 합니다.
+                </div>
+              )}
+
+              {archiveUserEmail ? (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-outline-variant/30 bg-surface p-4">
+                    <span className="text-xs font-bold text-on-surface-variant block mb-1">현재 계정</span>
+                    <strong className="text-sm text-on-background">{archiveUserEmail}</strong>
+                    {archiveStatus && <p className="text-xs text-primary mt-2">{archiveStatus}</p>}
+                  </div>
+                  <button
+                    onClick={onArchiveLogout}
+                    className="w-full h-11 rounded-xl border border-outline-variant text-on-surface font-bold flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>자료실 계정 로그아웃</span>
+                  </button>
+                </div>
+              ) : (
+                <form
+                  className="space-y-3"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    await onArchiveLogin(archiveEmail, archivePassword);
+                    setArchivePassword('');
+                  }}
+                >
+                  <label className="block text-xs font-bold text-on-surface-variant">
+                    이메일
+                    <input
+                      value={archiveEmail}
+                      onChange={(event) => setArchiveEmail(event.target.value)}
+                      className="mt-1 w-full h-11 px-3 rounded-xl border border-outline-variant bg-white text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                      type="email"
+                      autoComplete="email"
+                    />
+                  </label>
+                  <label className="block text-xs font-bold text-on-surface-variant">
+                    비밀번호
+                    <input
+                      value={archivePassword}
+                      onChange={(event) => setArchivePassword(event.target.value)}
+                      className="mt-1 w-full h-11 px-3 rounded-xl border border-outline-variant bg-white text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                      type="password"
+                      autoComplete="current-password"
+                    />
+                  </label>
+                  {archiveStatus && <p className="text-xs text-primary font-semibold">{archiveStatus}</p>}
+                  <button
+                    type="submit"
+                    disabled={!firebaseConfigured || !archiveEmail.trim() || !archivePassword}
+                    className="w-full h-11 rounded-xl bg-primary text-white font-bold disabled:opacity-40"
+                  >
+                    자료실 계정으로 로그인
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!firebaseConfigured || !archiveEmail.trim()}
+                    onClick={() => onArchivePasswordReset(archiveEmail)}
+                    className="w-full h-10 rounded-xl text-primary font-bold hover:bg-primary/5 disabled:opacity-40"
+                  >
+                    비밀번호 재설정 메일 보내기
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </div>

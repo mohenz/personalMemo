@@ -4,7 +4,6 @@ import {
   Trash2, 
   Star, 
   CheckCircle, 
-  Map, 
   Type, 
   Image as ImageIcon, 
   Paintbrush, 
@@ -13,7 +12,8 @@ import {
   MoreVertical,
   CheckSquare,
   Square,
-  FolderOpen
+  FolderOpen,
+  X
 } from 'lucide-react';
 import { Note, Group } from '../types';
 
@@ -36,6 +36,7 @@ export default function NoteDetail({
 }: NoteDetailProps) {
   const [showShareToast, setShowShareToast] = useState(false);
   const [showFormatToast, setShowFormatToast] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; index: number } | null>(null);
 
   if (!note) {
     return (
@@ -73,7 +74,7 @@ export default function NoteDetail({
     <section className="flex-1 flex flex-col relative overflow-hidden bg-background">
       
       {/* Top Header Controls / Writing Tools Overlay */}
-      <div className="absolute top-4 right-8 flex items-center gap-2 z-20">
+      <div className="absolute top-4 right-4 md:right-8 flex items-center gap-2 z-20">
         <button 
           onClick={() => onToggleFavorite(note.id)}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
@@ -108,8 +109,8 @@ export default function NoteDetail({
       </div>
 
       {/* Main Reading/Lined Canvas */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-12 pb-32 notebook-pattern select-text">
-        <div className="max-w-3xl mx-auto space-y-8">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-12 pb-32 notebook-pattern select-text">
+        <div className="max-w-6xl mx-auto space-y-8 pt-12 md:pt-0">
           
           {/* Metadata & Title Block */}
           <div>
@@ -121,7 +122,7 @@ export default function NoteDetail({
                 최종 수정: {note.updatedAt}
               </span>
             </div>
-            <h2 className="text-3xl font-extrabold text-on-background tracking-tight leading-snug">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-on-background leading-snug">
               {note.title}
             </h2>
           </div>
@@ -134,11 +135,21 @@ export default function NoteDetail({
 
             {/* Attached Image Grid (Hotlinks) */}
             {note.images && note.images.length > 0 && (
-              <div className="grid grid-cols-2 gap-4 my-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8">
                 {note.images.map((imgUrl, index) => (
                   <div 
                     key={index} 
-                    className="group relative overflow-hidden rounded-2xl shadow-md aspect-video cursor-zoom-in border border-outline-variant"
+                    onClick={() => setSelectedImage({ url: imgUrl, index })}
+                    className="group relative overflow-hidden rounded-xl shadow-soft aspect-video cursor-zoom-in border border-outline-variant"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedImage({ url: imgUrl, index });
+                      }
+                    }}
+                    aria-label={`첨부 이미지 ${index + 1} 확대 보기`}
                   >
                     <img 
                       src={imgUrl} 
@@ -186,38 +197,18 @@ export default function NoteDetail({
               </div>
             )}
 
-            {/* Location Map Placeholder Block */}
-            <div className="mt-12 p-6 bg-surface-container rounded-2xl border-2 border-dashed border-outline-variant">
-              <h4 className="font-bold text-on-surface mb-4 flex items-center gap-2">
-                <Map className="w-5 h-5 text-primary" />
-                <span>위치 정보</span>
-              </h4>
-              <div className="h-44 w-full rounded-xl overflow-hidden shadow-inner relative bg-surface-dim border border-outline-variant">
-                <div className="w-full h-full flex flex-col items-center justify-center text-outline-variant italic bg-surface relative p-4">
-                  <div className="absolute inset-0 opacity-[0.1] bg-[radial-gradient(#0058be_1px,transparent_1px)]" style={{ backgroundSize: '16px 16px' }} />
-                  <Map className="w-8 h-8 text-outline mb-2 stroke-[1.25]" />
-                  <span className="text-sm font-semibold text-on-surface-variant not-italic mb-1">
-                    Jeju Island, South Korea
-                  </span>
-                  <span className="text-xs text-outline">
-                    [지도 데이터 수집 완료: 제주도 서귀포시 안덕면]
-                  </span>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
 
       {/* Floating Toolbar at the bottom of the reading section */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-on-background/95 text-white px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl backdrop-blur-md z-20">
+      <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 bg-slate-950/95 text-slate-50 border border-white/10 px-4 md:px-6 py-3 rounded-xl flex items-center gap-4 md:gap-6 shadow-2xl backdrop-blur-md z-20">
         <button 
           onClick={() => {
             setShowFormatToast(true);
             setTimeout(() => setShowFormatToast(false), 2000);
           }}
-          className="flex flex-col items-center gap-1 text-white hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
         >
           <Type className="w-5 h-5" />
           <span className="text-[10px] font-bold">서식</span>
@@ -225,7 +216,7 @@ export default function NoteDetail({
 
         <button 
           onClick={onEdit}
-          className="flex flex-col items-center gap-1 text-white hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
         >
           <ImageIcon className="w-5 h-5" />
           <span className="text-[10px] font-bold">사진</span>
@@ -233,7 +224,7 @@ export default function NoteDetail({
 
         <button 
           onClick={handleDrawing}
-          className="flex flex-col items-center gap-1 text-white hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
         >
           <Paintbrush className="w-5 h-5" />
           <span className="text-[10px] font-bold">그리기</span>
@@ -241,17 +232,17 @@ export default function NoteDetail({
 
         <button 
           onClick={handleVoice}
-          className="flex flex-col items-center gap-1 text-white hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
         >
           <Mic className="w-5 h-5" />
           <span className="text-[10px] font-bold">음성</span>
         </button>
 
-        <div className="w-[1px] h-6 bg-outline-variant/30" />
+        <div className="w-[1px] h-6 bg-white/20" />
 
         <button 
           onClick={handleShare}
-          className="flex flex-col items-center gap-1 text-white hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
         >
           <Share2 className="w-5 h-5" />
           <span className="text-[10px] font-bold">공유</span>
@@ -261,13 +252,40 @@ export default function NoteDetail({
       {/* Temporary Interactivity Toasts */}
       {showShareToast && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-4 py-2 rounded-full shadow-lg font-semibold animate-fade-in-scale z-30">
-          공유 링크가 클립보드에 복사되었습니다! 🔗
+          공유 링크가 클립보드에 복사되었습니다.
         </div>
       )}
 
       {showFormatToast && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-4 py-2 rounded-full shadow-lg font-semibold animate-fade-in-scale z-30">
-          서식 도구: 'Manrope 폰트'가 완벽하게 적용되었습니다. 📝
+          서식 도구: Manrope 폰트가 적용되었습니다.
+        </div>
+      )}
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-[300] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
+          onClick={() => setSelectedImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`첨부 이미지 ${selectedImage.index + 1} 확대 보기`}
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedImage(null)}
+            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/95 text-on-surface flex items-center justify-center shadow-xl hover:bg-white transition-colors"
+            title="닫기"
+            aria-label="이미지 확대 보기 닫기"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={selectedImage.url}
+            alt={`첨부 이미지 ${selectedImage.index + 1} 확대`}
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+            referrerPolicy="no-referrer"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </section>

@@ -108,7 +108,7 @@ export default function SearchView({
     <div className="flex-1 flex flex-col h-full bg-background select-none">
       
       {/* Search Header Controls */}
-      <header className="sticky top-0 w-full z-20 bg-background/80 backdrop-blur-md px-10 py-6 border-b border-grid-line shadow-xs">
+      <header className="sticky top-0 w-full z-20 bg-background/80 backdrop-blur-md px-4 md:px-10 py-5 md:py-6 border-b border-grid-line shadow-xs">
         <div className="max-w-5xl mx-auto space-y-5">
           
           {/* Custom Search Box */}
@@ -118,7 +118,7 @@ export default function SearchView({
             </div>
             <input 
               type="text" 
-              className="w-full h-14 pl-12 pr-12 bg-surface rounded-xl border-none focus:outline-none focus:ring-2 focus:ring-primary text-base font-semibold text-on-surface transition-all placeholder:text-outline-variant"
+              className="w-full h-14 pl-12 pr-12 bg-surface rounded-xl border border-transparent focus:outline-none focus:ring-2 focus:ring-primary text-base font-semibold text-on-surface transition-all placeholder:text-outline-variant"
               placeholder="검색어를 입력하여 메모, 일정을 찾아보세요..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -214,7 +214,7 @@ export default function SearchView({
       </header>
 
       {/* Grid / List Result Section */}
-      <section className="flex-1 overflow-y-auto px-10 pb-24">
+      <section className="flex-1 overflow-y-auto px-4 md:px-10 pb-24">
         <div className="max-w-5xl mx-auto py-8">
           
           {/* Section title & Layout toggles */}
@@ -267,7 +267,7 @@ export default function SearchView({
                   <div 
                     key={note.id}
                     onClick={() => onSelectNote(note.id)}
-                    className="bg-surface-container-lowest rounded-2xl border border-outline-variant hover:border-primary shadow-soft hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer flex flex-col h-full overflow-hidden relative group"
+                    className="bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary shadow-soft hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer flex flex-col h-full overflow-hidden relative group"
                   >
                     {/* Fixed Pin Badge overlay if starred */}
                     {note.isFavorite && (
@@ -347,7 +347,7 @@ export default function SearchView({
       {/* Floating Action Button (FAB) */}
       <button 
         onClick={onAddNote}
-        className="fixed bottom-10 right-10 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30 cursor-pointer"
+        className="fixed bottom-6 right-6 md:bottom-10 md:right-10 w-14 h-14 md:w-16 md:h-16 bg-primary text-white rounded-xl shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30 cursor-pointer"
         title="새 메모 쓰기"
       >
         <Plus className="w-8 h-8 text-white stroke-[2]" />

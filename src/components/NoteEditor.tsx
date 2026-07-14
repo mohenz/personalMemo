@@ -6,6 +6,7 @@ import {
   MoreVertical, 
   Plus, 
   X, 
+  Upload,
   PlusCircle, 
   CheckSquare, 
   Trash2,
@@ -18,6 +19,7 @@ interface NoteEditorProps {
   note: Note | null; // null if creating a new note
   groups: Group[];
   onSave: (noteData: Partial<Note>) => void;
+  onUploadImage?: (file: File) => Promise<string>;
   onCancel: () => void;
 }
 
@@ -25,6 +27,7 @@ export default function NoteEditor({
   note,
   groups,
   onSave,
+  onUploadImage,
   onCancel
 }: NoteEditorProps) {
   const [title, setTitle] = useState(note?.title || '');
@@ -34,6 +37,7 @@ export default function NoteEditor({
   const [checklist, setChecklist] = useState<ChecklistItem[]>(note?.checklist || []);
   const [newTodoText, setNewTodoText] = useState('');
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -81,6 +85,23 @@ export default function NoteEditor({
     setShowImagePicker(false);
   };
 
+  const handleUploadImageFile = async (file: File | undefined) => {
+    if (!file) return;
+    if (!onUploadImage) {
+      setUploadStatus('자료실 계정 로그인 후 Firebase Storage에 업로드할 수 있습니다.');
+      return;
+    }
+
+    setUploadStatus('자료실 Storage에 업로드하는 중입니다.');
+    try {
+      const url = await onUploadImage(file);
+      handleAddImage(url);
+      setUploadStatus('자료실 Storage에 업로드했습니다.');
+    } catch (error) {
+      setUploadStatus(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.');
+    }
+  };
+
   const handleRemoveImage = (url: string) => {
     setImages(images.filter(img => img !== url));
   };
@@ -89,8 +110,8 @@ export default function NoteEditor({
     <section className="flex-1 bg-background flex flex-col overflow-hidden h-full relative">
       
       {/* Editor Top App Bar */}
-      <header className="sticky top-0 w-full flex justify-between items-center px-6 h-16 z-20 bg-background/95 backdrop-blur-md border-b border-grid-line shadow-sm">
-        <div className="flex items-center gap-4 flex-1">
+      <header className="sticky top-0 w-full flex flex-col md:flex-row justify-between gap-3 md:items-center px-4 md:px-6 py-3 md:h-16 z-20 bg-background/95 backdrop-blur-md border-b border-grid-line shadow-sm">
+        <div className="flex items-center gap-4 flex-1 w-full">
           <button 
             onClick={onCancel}
             className="hover:bg-surface-container rounded-full p-2 transition-all active:scale-95 text-on-surface"
@@ -101,16 +122,16 @@ export default function NoteEditor({
           
           <input 
             type="text"
-            className="bg-transparent border-none focus:outline-none focus:ring-0 font-sans text-xl font-bold text-on-background w-full max-w-lg placeholder:text-outline-variant"
+            className="bg-transparent border-none focus:outline-none focus:ring-0 font-sans text-lg md:text-xl font-bold text-on-background w-full max-w-lg placeholder:text-outline-variant"
             placeholder="제목을 입력하세요..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
           {/* Group Folder Dropdown Selector */}
-          <div className="flex items-center bg-surface px-3 py-1.5 rounded-xl border border-outline-variant text-sm font-semibold text-on-surface">
+          <div className="flex items-center bg-surface px-3 py-1.5 rounded-xl border border-outline-variant text-sm font-semibold text-on-surface shrink-0">
             <span className="text-outline mr-2 text-xs uppercase">그룹:</span>
             <select 
               value={groupId} 
@@ -125,7 +146,7 @@ export default function NoteEditor({
 
           <button 
             onClick={handleSave}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full hover:brightness-115 active:scale-95 transition-all text-sm font-semibold shadow-soft cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:brightness-115 active:scale-95 transition-all text-sm font-semibold shadow-soft cursor-pointer shrink-0"
           >
             <Save className="w-4 h-4" />
             <span>저장</span>
@@ -142,14 +163,14 @@ export default function NoteEditor({
       </header>
 
       {/* Main Notebook Grid Canvas */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar notebook-grid p-8 md:p-12">
-        <div className="max-w-3xl mx-auto space-y-6 bg-surface-container-lowest/70 backdrop-blur-xs p-6 md:p-8 rounded-2xl border border-outline-variant/30 shadow-xs">
+      <div className="flex-1 overflow-y-auto custom-scrollbar notebook-grid p-3 md:p-4">
+        <div className="w-full min-h-full max-w-none mx-auto space-y-6 bg-surface-container-lowest/80 backdrop-blur-xs p-5 md:p-8 rounded-xl border border-outline-variant/30 shadow-soft">
           
           {/* Core Content Textarea */}
           <textarea 
-            className="w-full min-h-[400px] bg-transparent border-none focus:outline-none focus:ring-0 p-0 text-on-surface font-sans text-base leading-8 resize-none"
+            className="w-full min-h-[calc(100vh-300px)] bg-transparent border-none focus:outline-none focus:ring-0 p-0 text-on-surface font-sans text-base leading-8 resize-none"
             placeholder="여기에 내용을 입력하세요..."
-            style={{ minHeight: '360px', lineHeight: '28px' }}
+            style={{ lineHeight: '28px' }}
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
@@ -204,7 +225,7 @@ export default function NoteEditor({
 
       {/* Premium Attachment Bar at the bottom */}
       <footer className="bg-white/95 backdrop-blur-md border-t border-grid-line p-4 z-10 shrink-0">
-        <div className="max-w-5xl mx-auto flex items-center gap-4">
+        <div className="w-full max-w-none mx-auto flex items-center gap-4">
           {/* Dynamic Square Photo Picker Button */}
           <div 
             onClick={() => setShowImagePicker(true)}
@@ -242,7 +263,7 @@ export default function NoteEditor({
       {/* Premium Digital Stationery Asset Selector Modal */}
       {showImagePicker && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 animate-fade-in-scale">
-          <div className="bg-white p-6 rounded-2xl w-[480px] max-w-full shadow-2xl border border-outline-variant flex flex-col gap-4">
+          <div className="bg-white p-6 rounded-xl w-[480px] max-w-[calc(100vw-2rem)] shadow-2xl border border-outline-variant flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-primary" />
@@ -259,6 +280,18 @@ export default function NoteEditor({
             <p className="text-xs text-on-surface-variant">
               이 메모와 어울리는 고해상도 디자인 라이브러리 일러스트를 선택하여 노트를 더욱 아름답게 장식하세요.
             </p>
+
+            <label className="border-2 border-dashed border-outline-variant rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-primary cursor-pointer hover:bg-primary/5 transition-colors">
+              <Upload className="w-5 h-5" />
+              <span className="text-xs font-bold">자료실 Storage에 이미지 업로드</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => handleUploadImageFile(event.target.files?.[0])}
+              />
+            </label>
+            {uploadStatus && <p className="text-xs font-semibold text-primary">{uploadStatus}</p>}
 
             <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-[300px] p-1 custom-scrollbar">
               <button 

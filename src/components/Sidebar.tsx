@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { 
+  Archive, 
   FileText, 
   Calendar, 
   Star, 
@@ -15,7 +16,6 @@ import {
   Plus
 } from 'lucide-react';
 import { Group, ScreenType } from '../types';
-import { PREMIUM_IMAGES } from '../data';
 
 interface SidebarProps {
   currentScreen: ScreenType;
@@ -26,6 +26,7 @@ interface SidebarProps {
   onAddGroup: (name: string) => void;
   totalNotesCount: number;
   profileImage: string;
+  onOpenArchive: () => void;
   onOpenSettings: () => void;
 }
 
@@ -38,6 +39,7 @@ export default function Sidebar({
   onAddGroup,
   totalNotesCount,
   profileImage,
+  onOpenArchive,
   onOpenSettings
 }: SidebarProps) {
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
@@ -62,34 +64,33 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-[280px] h-full flex flex-col border-r border-outline-variant bg-surface-container-low select-none shrink-0 z-30">
+    <aside className="w-full lg:w-[280px] max-h-[44vh] lg:max-h-none lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant bg-surface-container-low shrink-0 z-30">
       {/* Profile Header */}
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant shadow-sm shrink-0">
+      <div className="p-4 lg:p-6 lg:pb-4 min-h-0">
+        <div className="flex items-center justify-center lg:justify-start mb-4 lg:mb-6">
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            title="설정 및 프로필 변경"
+            className="w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant shadow-sm shrink-0 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
             <img 
-              className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform" 
+              className="w-full h-full object-cover" 
               src={profileImage} 
-              alt="Creative Professional"
+              alt="프로필 이미지"
               referrerPolicy="no-referrer"
-              onClick={onOpenSettings}
-              title="설정 및 프로필 변경"
             />
-          </div>
-          <div className="cursor-pointer" onClick={onOpenSettings} title="설정 및 프로필 변경">
-            <h1 className="font-sans text-lg font-bold text-on-background">내 메모장</h1>
-            <p className="font-sans text-xs text-on-surface-variant">개인용 디지털 스테이셔너리</p>
-          </div>
+          </button>
         </div>
 
         {/* Primary Screen Navigation */}
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-row lg:flex-col gap-2 lg:gap-1 overflow-x-auto lg:overflow-x-visible no-scrollbar pb-1 lg:pb-0">
           <button
             onClick={() => {
               setScreen('DASHBOARD');
               setActiveGroupId('all');
             }}
-            className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
               currentScreen === 'DASHBOARD' && activeGroupId === 'all'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -110,7 +111,7 @@ export default function Sidebar({
 
           <button
             onClick={() => setScreen('CALENDAR')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
               currentScreen === 'CALENDAR'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -125,7 +126,7 @@ export default function Sidebar({
               setScreen('DASHBOARD');
               setActiveGroupId('starred');
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
               currentScreen === 'DASHBOARD' && activeGroupId === 'starred'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -137,7 +138,7 @@ export default function Sidebar({
 
           <button
             onClick={() => setScreen('SEARCH')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
               currentScreen === 'SEARCH'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -147,8 +148,17 @@ export default function Sidebar({
             <span>태그 및 검색</span>
           </button>
 
+          <button
+            onClick={onOpenArchive}
+            className="min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+            title="자료실 열기"
+          >
+            <Archive className="w-5 h-5" />
+            <span>자료실</span>
+          </button>
+
           {/* Group Folder Divider */}
-          <div className="pt-5 pb-2 px-4 flex items-center justify-between">
+          <div className="flex pt-1 lg:pt-5 pb-2 px-4 items-center justify-between min-w-max lg:min-w-0">
             <span className="text-[11px] font-bold text-outline uppercase tracking-wider">그룹 폴더</span>
             <button 
               onClick={() => setShowAddFolderModal(true)} 
@@ -160,7 +170,7 @@ export default function Sidebar({
           </div>
 
           {/* Dynamic Folder Items */}
-          <div className="max-h-[220px] overflow-y-auto custom-scrollbar flex flex-col gap-0.5">
+          <div className="hidden lg:flex max-h-[220px] overflow-y-auto custom-scrollbar flex-col gap-0.5">
             {groups.map((group) => (
               <button
                 key={group.id}
@@ -180,7 +190,7 @@ export default function Sidebar({
             ))}
           </div>
 
-          <div className="my-1 border-t border-outline-variant/30" />
+          <div className="hidden lg:block my-1 border-t border-outline-variant/30" />
 
           {/* Trash Navigation */}
           <button
@@ -188,7 +198,7 @@ export default function Sidebar({
               setScreen('DASHBOARD');
               setActiveGroupId('trash');
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
               currentScreen === 'DASHBOARD' && activeGroupId === 'trash'
                 ? 'bg-red-50 text-red-700 font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -201,7 +211,7 @@ export default function Sidebar({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="mt-auto p-4 border-t border-outline-variant/30 flex flex-col gap-1">
+      <div className="hidden lg:flex mt-auto p-4 border-t border-outline-variant/30 flex-col gap-1">
         <button 
           onClick={() => setShowAddFolderModal(true)}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-dashed border-outline text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface hover:border-primary transition-all active:scale-95 text-sm font-semibold cursor-pointer"
@@ -240,10 +250,10 @@ export default function Sidebar({
 
       {/* Add Folder Modal Popover */}
       {showAddFolderModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 animate-fade-in-scale">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[200] animate-fade-in-scale p-4">
           <form 
             onSubmit={handleCreateFolder}
-            className="bg-white p-6 rounded-2xl w-80 shadow-2xl border border-outline-variant flex flex-col gap-4"
+            className="bg-white p-6 rounded-2xl w-80 max-w-full shadow-2xl border border-outline-variant flex flex-col gap-4 select-text"
           >
             <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
               <FolderPlus className="w-5 h-5 text-primary" />
@@ -256,10 +266,11 @@ export default function Sidebar({
               type="text"
               autoFocus
               required
+              maxLength={40}
               placeholder="예: 아이디어, 영감, 미팅록"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
-              className="w-full h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+              className="w-full h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-medium text-on-surface bg-white select-text"
             />
             <div className="flex items-center justify-end gap-2 text-sm font-semibold">
               <button
@@ -274,7 +285,8 @@ export default function Sidebar({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary text-white rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-soft"
+                disabled={!newFolderName.trim()}
+                className="px-4 py-2 bg-primary text-white rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-soft disabled:opacity-40"
               >
                 생성
               </button>
