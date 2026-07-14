@@ -25,23 +25,34 @@ export default function CalendarView({
   onSelectNote,
   onAddNoteWithDate
 }: CalendarViewProps) {
-  // Set July 2026 as the active calendar month
-  const [selectedDay, setSelectedDay] = useState<number>(15);
+  const [viewMonth, setViewMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+  const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
   const [searchQuery, setSearchQuery] = useState('');
 
-  // June 28, 29, 30 are padded days of previous month.
-  // July starts on Wednesday, July 1st, 2026.
-  const paddingDays = [28, 29, 30];
-  const julyDays = Array.from({ length: 31 }, (_, i) => i + 1);
-  const nextMonthPadding = [1, 2];
+  const year = viewMonth.getFullYear();
+  const monthIndex = viewMonth.getMonth();
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  const firstWeekday = new Date(year, monthIndex, 1).getDay();
+  const previousMonthLastDay = new Date(year, monthIndex, 0).getDate();
+  const paddingDays = Array.from(
+    { length: firstWeekday },
+    (_, index) => previousMonthLastDay - firstWeekday + index + 1
+  );
+  const monthDays = Array.from({ length: daysInMonth }, (_, index) => index + 1);
+  const nextMonthPadding = Array.from(
+    { length: (7 - ((firstWeekday + daysInMonth) % 7)) % 7 },
+    (_, index) => index + 1
+  );
 
-  // Helper to get formatted string for July 2026
   const getFormattedDateString = (day: number) => {
+    const monthStr = `${monthIndex + 1}`.padStart(2, '0');
     const dayStr = day < 10 ? `0${day}` : `${day}`;
-    return `2026-07-${dayStr}`;
+    return `${year}-${monthStr}-${dayStr}`;
   };
 
-  // Find all notes written on a specific day in July 2026
   const getNotesForDay = (day: number) => {
     const dateStr = getFormattedDateString(day);
     return notes.filter(note => !note.isDeleted && note.dateString === dateStr);
@@ -50,21 +61,31 @@ export default function CalendarView({
   // Get notes for currently selected day
   const selectedDayNotes = useMemo(() => {
     return getNotesForDay(selectedDay);
-  }, [notes, selectedDay]);
+  }, [notes, selectedDay, year, monthIndex]);
 
-  // List of all days in July 2026 that have at least one note
   const daysWithNotes = useMemo(() => {
     const daySet = new Set<number>();
-    for (let day = 1; day <= 31; day++) {
+    for (let day = 1; day <= daysInMonth; day++) {
       if (getNotesForDay(day).length > 0) {
         daySet.add(day);
       }
     }
     return daySet;
-  }, [notes]);
+  }, [notes, year, monthIndex, daysInMonth]);
 
   const handleDayClick = (day: number) => {
     setSelectedDay(day);
+  };
+
+  const moveMonth = (offset: number) => {
+    setViewMonth(new Date(year, monthIndex + offset, 1));
+    setSelectedDay(1);
+  };
+
+  const moveToToday = () => {
+    const today = new Date();
+    setViewMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedDay(today.getDate());
   };
 
   return (
@@ -73,19 +94,30 @@ export default function CalendarView({
       {/* Top Calendar Header Controls */}
       <header className="sticky top-0 w-full flex flex-col md:flex-row justify-between gap-3 md:items-center px-4 md:px-8 py-3 md:h-16 z-20 bg-background/80 backdrop-blur-md border-b border-grid-line">
         <div className="flex items-center gap-4 md:gap-6">
-          <span className="font-sans text-xl font-bold text-on-background">2026년 7월</span>
+          <span className="font-sans text-xl font-bold text-on-background">{year}년 {monthIndex + 1}월</span>
           
           <div className="flex items-center bg-surface-container rounded-full p-1">
-            <button className="p-1 hover:bg-surface-dim rounded-full transition-all active:scale-90 text-on-surface-variant cursor-pointer">
+            <button
+              type="button"
+              onClick={() => moveMonth(-1)}
+              aria-label="이전 달"
+              className="p-1 hover:bg-surface-dim rounded-full transition-all active:scale-90 text-on-surface-variant cursor-pointer"
+            >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button 
-              onClick={() => setSelectedDay(15)} // Reset to 15 (mock today)
+              type="button"
+              onClick={moveToToday}
               className="px-4 py-1 font-sans text-xs font-bold text-primary bg-surface-container-lowest rounded-full shadow-xs active:scale-95 transition-all cursor-pointer"
             >
               오늘
             </button>
-            <button className="p-1 hover:bg-surface-dim rounded-full transition-all active:scale-90 text-on-surface-variant cursor-pointer">
+            <button
+              type="button"
+              onClick={() => moveMonth(1)}
+              aria-label="다음 달"
+              className="p-1 hover:bg-surface-dim rounded-full transition-all active:scale-90 text-on-surface-variant cursor-pointer"
+            >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -145,19 +177,18 @@ export default function CalendarView({
                 </div>
               ))}
 
-              {/* July days */}
-              {julyDays.map((day) => {
-                // Sunday check (starts Wednesday, index 3. indices: Wed=1, Thu=2, Fri=3, Sat=4, Sun=5, Mon=6, Tue=7 -> Sun is index 5, 12, 19, 26)
-                const isSunday = (day + 2) % 7 === 0;
-                // Saturday check
-                const isSaturday = (day + 2) % 7 === 6;
+              {/* Current month days */}
+              {monthDays.map((day) => {
+                const weekday = (firstWeekday + day - 1) % 7;
+                const isSunday = weekday === 0;
+                const isSaturday = weekday === 6;
                 const hasNote = daysWithNotes.has(day);
                 const isSelected = day === selectedDay;
                 const dayNotesList = getNotesForDay(day);
 
                 return (
                   <div
-                    key={`july-${day}`}
+                    key={`${year}-${monthIndex}-${day}`}
                     onClick={() => handleDayClick(day)}
                     className={`border-r border-b border-grid-line p-3 flex flex-col justify-between hover:bg-primary/5 cursor-pointer transition-colors relative group ${
                       isSelected ? 'bg-primary/5' : ''
@@ -221,7 +252,7 @@ export default function CalendarView({
             
             <div className="space-y-4 overflow-y-auto custom-scrollbar pr-1 flex-1">
               <div className="flex items-center justify-between">
-                <h2 className="font-sans text-lg font-bold text-on-surface">7월 {selectedDay}일 일정</h2>
+                <h2 className="font-sans text-lg font-bold text-on-surface">{monthIndex + 1}월 {selectedDay}일 일정</h2>
                 <span className="text-xs bg-surface-container-high px-2 py-0.5 rounded-full text-on-surface-variant font-bold">
                   {selectedDayNotes.length}개의 메모
                 </span>
