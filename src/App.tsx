@@ -42,6 +42,7 @@ import {
   uploadMemoProfileImage,
 } from './services/archiveIntegration';
 import { isFirebaseConfigured } from './firebase/client';
+import { toLocalDateString } from './utils/date';
 
 const LEGACY_SAMPLE_NOTE_IDS = new Set([
   'note-1',
@@ -272,8 +273,7 @@ export default function App() {
       setSelectedNoteId(editingNote.id);
     } else {
       // Creating Mode
-      const today = new Date();
-      const dateStr = prefilledDate || today.toISOString().split('T')[0]; // Pre-filled or current date
+      const dateStr = prefilledDate || toLocalDateString(); // Pre-filled or current local date
       const newNote: Note = {
         id: 'note-' + Date.now(),
         title: editedFields.title || '제목 없는 메모',
