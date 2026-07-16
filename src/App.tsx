@@ -44,6 +44,8 @@ import {
 import { isFirebaseConfigured } from './firebase/client';
 import { toLocalDateString } from './utils/date';
 import {
+  LEGACY_SAMPLE_GROUP_IDS,
+  LEGACY_SAMPLE_NOTE_IDS,
   legacyMigrationKey,
   readLegacyMemoState,
 } from './utils/legacyMemoMigration';
@@ -113,10 +115,10 @@ export default function App() {
       try {
         const cloudState = await loadMemoCloudState(user.uid);
         let nextNotes = Array.isArray(cloudState?.notes)
-          ? cloudState.notes
+          ? cloudState.notes.filter((note) => !LEGACY_SAMPLE_NOTE_IDS.has(note.id))
           : [];
         let nextGroups = Array.isArray(cloudState?.groups)
-          ? cloudState.groups
+          ? cloudState.groups.filter((group) => !LEGACY_SAMPLE_GROUP_IDS.has(group.id))
           : [];
         let nextProfileImage = typeof cloudState?.profileImage === 'string'
           ? cloudState.profileImage
@@ -127,7 +129,7 @@ export default function App() {
 
         if (nextNotes.length === 0 && localStorage.getItem(migrationMarker) !== 'true') {
           const legacyState = readLegacyMemoState(localStorage);
-          if (legacyState.hasData) {
+          if (legacyState.notes.length > 0) {
             nextNotes = legacyState.notes;
             nextGroups = legacyState.groups;
             nextProfileImage = legacyState.profileImage || nextProfileImage;
@@ -139,9 +141,9 @@ export default function App() {
               notes: nextNotes,
               profileImage: nextProfileImage,
             });
-            recoveredLegacy = legacyState.notes.length > 0 || legacyState.groups.length > 0;
-            localStorage.setItem(migrationMarker, 'true');
+            recoveredLegacy = true;
           }
+          localStorage.setItem(migrationMarker, 'true');
         } else if (nextNotes.length > 0) {
           localStorage.setItem(migrationMarker, 'true');
         }

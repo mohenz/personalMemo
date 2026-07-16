@@ -6,7 +6,7 @@ const storageWith = (values: Record<string, string>) => ({
 });
 
 describe('legacy memo migration', () => {
-  it('recovers every legacy note and setting without treating edited samples as disposable', () => {
+  it('recovers user notes while excluding bundled sample notes', () => {
     const state = readLegacyMemoState(storageWith({
       personal_notes_data: JSON.stringify([
         { id: 'note-1', groupId: 'work' },
@@ -19,10 +19,9 @@ describe('legacy memo migration', () => {
       personal_notes_dark_mode: 'true',
     }));
 
-    expect(state.notes.map((note) => note.id)).toEqual(['note-1', 'note-1720000000000']);
+    expect(state.notes.map((note) => note.id)).toEqual(['note-1720000000000']);
     expect(state.groups.map((group) => group.id)).toEqual(['work', 'custom']);
     expect(state.darkMode).toBe(true);
-    expect(state.hasData).toBe(true);
   });
 
   it('returns an empty state for malformed legacy data', () => {
@@ -31,6 +30,6 @@ describe('legacy memo migration', () => {
   });
 
   it('scopes the completed marker to the Firebase user', () => {
-    expect(legacyMigrationKey('user-123')).toBe('personal_notes_firebase_migrated_v2_user-123');
+    expect(legacyMigrationKey('user-123')).toBe('personal_notes_firebase_migrated_user-123');
   });
 });
