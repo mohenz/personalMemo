@@ -43,12 +43,21 @@ import {
 } from './services/archiveIntegration';
 import { isFirebaseConfigured } from './firebase/client';
 import { toLocalDateString } from './utils/date';
-import {
-  LEGACY_SAMPLE_GROUP_IDS,
-  LEGACY_SAMPLE_NOTE_IDS,
-  legacyMigrationKey,
-  readLegacyMemoState,
-} from './utils/legacyMemoMigration';
+
+const LEGACY_SAMPLE_NOTE_IDS = new Set([
+  'note-1',
+  'note-2',
+  'note-3',
+  'note-4',
+  'note-5',
+  'note-6',
+  'note-7',
+  'note-8',
+  'note-9',
+  'note-10',
+]);
+
+const LEGACY_SAMPLE_GROUP_IDS = new Set(['work', 'personal', 'travel']);
 
 export default function App() {
   // --- Screen State Control ---
@@ -114,47 +123,17 @@ export default function App() {
 
       try {
         const cloudState = await loadMemoCloudState(user.uid);
-        let nextNotes = Array.isArray(cloudState?.notes)
+        const nextNotes = Array.isArray(cloudState?.notes)
           ? cloudState.notes.filter((note) => !LEGACY_SAMPLE_NOTE_IDS.has(note.id))
           : [];
-        let nextGroups = Array.isArray(cloudState?.groups)
+        const nextGroups = Array.isArray(cloudState?.groups)
           ? cloudState.groups.filter((group) => !LEGACY_SAMPLE_GROUP_IDS.has(group.id))
           : [];
-        let nextProfileImage = typeof cloudState?.profileImage === 'string'
-          ? cloudState.profileImage
-          : PREMIUM_IMAGES.userProfile;
-        let nextDarkMode = typeof cloudState?.darkMode === 'boolean' ? cloudState.darkMode : false;
-        let recoveredLegacy = false;
-        const migrationMarker = legacyMigrationKey(user.uid);
-
-        if (nextNotes.length === 0 && localStorage.getItem(migrationMarker) !== 'true') {
-          const legacyState = readLegacyMemoState(localStorage);
-          if (legacyState.notes.length > 0) {
-            nextNotes = legacyState.notes;
-            nextGroups = legacyState.groups;
-            nextProfileImage = legacyState.profileImage || nextProfileImage;
-            nextDarkMode = legacyState.darkMode;
-
-            await saveMemoCloudState(user.uid, {
-              darkMode: nextDarkMode,
-              groups: nextGroups,
-              notes: nextNotes,
-              profileImage: nextProfileImage,
-            });
-            recoveredLegacy = true;
-          }
-          localStorage.setItem(migrationMarker, 'true');
-        } else if (nextNotes.length > 0) {
-          localStorage.setItem(migrationMarker, 'true');
-        }
-
         setNotes(nextNotes);
         setGroups(nextGroups);
-        setProfileImage(nextProfileImage);
-        setDarkMode(nextDarkMode);
-        setArchiveStatus(recoveredLegacy
-          ? `기존 메모 ${nextNotes.length}개를 Firebase로 복구했습니다.`
-          : '자료실 계정과 동기화되었습니다.');
+        setProfileImage(typeof cloudState?.profileImage === 'string' ? cloudState.profileImage : PREMIUM_IMAGES.userProfile);
+        setDarkMode(typeof cloudState?.darkMode === 'boolean' ? cloudState.darkMode : false);
+        setArchiveStatus('자료실 계정과 동기화되었습니다.');
       } catch (error) {
         setArchiveStatus(error instanceof Error ? error.message : '자료실 동기화에 실패했습니다.');
       } finally {
