@@ -485,7 +485,7 @@ export default function App() {
 
             {/* Main Dashboard Screen (List & Reading Pane Split) */}
             {screen === 'DASHBOARD' && (
-              <div className="flex-1 flex flex-col h-full">
+              <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
                 
                 {/* Dashboard Header Bar */}
                 <header className="sticky top-0 w-full flex flex-col sm:flex-row justify-between gap-3 sm:items-center px-4 md:px-8 py-3 sm:h-16 z-20 bg-background/90 backdrop-blur-md border-b border-grid-line shrink-0">
@@ -534,7 +534,7 @@ export default function App() {
                 <div className="flex flex-col xl:flex-row flex-1 min-h-0 overflow-hidden">
                   
                   {/* Note List Pane (Middle) */}
-                  <section className="w-full xl:w-[360px] max-h-[42vh] xl:max-h-none border-b xl:border-b-0 xl:border-r border-grid-line flex flex-col bg-surface-bright shrink-0">
+                  <section className="w-full xl:w-[360px] max-h-[42vh] xl:max-h-none min-h-0 border-b xl:border-b-0 xl:border-r border-grid-line flex flex-col bg-surface-bright shrink-0">
                     <div className="p-4 flex items-center justify-between shrink-0">
                       <h2 className="font-sans text-lg font-bold text-on-surface px-2">
                         {activeGroupId === 'all' && '최근 메모'}
@@ -553,7 +553,7 @@ export default function App() {
                     </div>
 
                     {/* Scrollable Cards list */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 space-y-3 pb-24">
+                    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar px-4 space-y-3 pb-24">
                       {filteredDashboardNotes.length === 0 ? (
                         <div className="text-center py-20 opacity-40 select-none">
                           <FileText className="w-10 h-10 text-outline mx-auto mb-2 stroke-[1.25]" />
