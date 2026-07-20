@@ -40,7 +40,7 @@ export default function SplashView({ onComplete }: SplashViewProps) {
         
         {/* Brand Name */}
         <h1 className="font-sans text-3xl font-bold text-primary tracking-tight mb-2">
-          Personal Notes
+          MEMOry
         </h1>
         <p className="font-sans text-xs text-text-secondary tracking-widest uppercase font-semibold">         
         </p>

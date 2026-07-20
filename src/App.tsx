@@ -341,7 +341,7 @@ export default function App() {
             <Cloud className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-on-background">내 메모장</h1>
+            <h1 className="text-xl font-bold text-on-background">MEMOry</h1>
             <p className="text-xs font-semibold text-on-surface-variant mt-1">메모장과 자료실 통합 계정</p>
           </div>
         </div>

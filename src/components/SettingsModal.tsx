@@ -261,7 +261,7 @@ export default function SettingsModal({
                         <Smartphone className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-on-background">내 메모장 앱 설치하기</h4>
+                        <h4 className="text-xs font-bold text-on-background">MEMOry 앱 설치하기</h4>
                         <p className="text-[10px] text-on-surface-variant mt-0.5">네트워크가 없어도 오프라인 상태에서 즉시 노트를 작성하고 기록하세요.</p>
                       </div>
                     </div>

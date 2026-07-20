@@ -1,6 +1,6 @@
 {
-  "name": "내 메모장 - 프리미엄 디지털 스테이셔너리",
-  "short_name": "내 메모장",
+  "name": "MEMOry",
+  "short_name": "MEMOry",
   "description": "태블릿 대화면에 최적화된 프리미엄 개인용 디지털 메모장",
   "start_url": "/",
   "display": "standalone",
