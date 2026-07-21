@@ -143,6 +143,10 @@ h1 {
   text-decoration: none;
 }
 
+.logout-button {
+  font-weight: 700;
+}
+
 .upload-button {
   display: inline-flex;
   align-items: center;

@@ -310,7 +310,7 @@ export default function SettingsModal({
                     className="w-full h-11 rounded-xl border border-outline-variant text-on-surface font-bold flex items-center justify-center gap-2 hover:bg-surface-container-high transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>자료실 계정 로그아웃</span>
+                    <span>MEMOry 로그아웃</span>
                   </button>
                 </div>
               ) : (
