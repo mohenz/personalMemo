@@ -109,6 +109,7 @@ export default function App() {
   const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
   const [dashboardSortDesc, setDashboardSortDesc] = useState(true);
   const [prefilledDate, setPrefilledDate] = useState<string | null>(null);
+  const draftNoteIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     return subscribeArchiveAccount(async (user) => {
@@ -254,14 +255,53 @@ export default function App() {
   };
 
   const handleStartAddNote = (withDate?: string) => {
+    draftNoteIdRef.current = null;
     setEditingNote(null);
     setPrefilledDate(withDate || null);
     setScreen('EDITOR');
   };
 
   const handleStartEditNote = (note: Note) => {
+    draftNoteIdRef.current = null;
     setEditingNote(note);
     setScreen('EDITOR');
+  };
+
+  const handleAutoSaveNote = (editedFields: Partial<Note>) => {
+    if (editingNote) {
+      setNotes(prev => prev.map(note =>
+        note.id === editingNote.id ? { ...note, ...editedFields } as Note : note
+      ));
+      return;
+    }
+
+    const draftNoteId = draftNoteIdRef.current;
+    if (draftNoteId) {
+      setNotes(prev => prev.map(note =>
+        note.id === draftNoteId ? { ...note, ...editedFields } as Note : note
+      ));
+      return;
+    }
+
+    const dateStr = prefilledDate || toLocalDateString();
+    const newNote: Note = {
+      id: 'note-' + Date.now(),
+      title: editedFields.title || '제목 없는 메모',
+      content: editedFields.content || '',
+      groupId: editedFields.groupId || 'personal',
+      createdAt: editedFields.updatedAt || '',
+      updatedAt: editedFields.updatedAt || '',
+      dateString: dateStr,
+      isFavorite: false,
+      isDeleted: false,
+      images: editedFields.images || [],
+      checklist: editedFields.checklist || []
+    };
+
+    draftNoteIdRef.current = newNote.id;
+    setEditingNote(newNote);
+    setNotes(prev => [newNote, ...prev]);
+    setSelectedNoteId(newNote.id);
   };
 
   const handleSaveNote = (editedFields: Partial<Note>) => {
@@ -290,6 +330,7 @@ export default function App() {
       setNotes(prev => [newNote, ...prev]);
       setSelectedNoteId(newNote.id);
     }
+    draftNoteIdRef.current = null;
     setPrefilledDate(null);
     setScreen('DASHBOARD');
   };
@@ -443,8 +484,10 @@ export default function App() {
                 note={editingNote}
                 groups={groups}
                 onSave={handleSaveNote}
+                onAutoSave={handleAutoSaveNote}
                 onUploadImage={archiveUser ? (file) => uploadMemoImage(archiveUser.uid, file) : undefined}
                 onCancel={() => {
+                  draftNoteIdRef.current = null;
                   setPrefilledDate(null);
                   setScreen('DASHBOARD');
                 }}

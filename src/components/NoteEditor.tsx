@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { 
   ArrowLeft, 
   Save, 
@@ -19,6 +19,7 @@ interface NoteEditorProps {
   note: Note | null; // null if creating a new note
   groups: Group[];
   onSave: (noteData: Partial<Note>) => void;
+  onAutoSave?: (noteData: Partial<Note>) => void;
   onUploadImage?: (file: File) => Promise<string>;
   onCancel: () => void;
 }
@@ -27,6 +28,7 @@ export default function NoteEditor({
   note,
   groups,
   onSave,
+  onAutoSave,
   onUploadImage,
   onCancel
 }: NoteEditorProps) {
@@ -38,27 +40,58 @@ export default function NoteEditor({
   const [newTodoText, setNewTodoText] = useState('');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
+  const initialSnapshotRef = useRef('');
+  const lastAutoSavedSnapshotRef = useRef('');
+
+  const buildNotePayload = (): Partial<Note> => ({
+    title: title.trim() || '제목 없는 메모',
+    content: content,
+    groupId: groupId,
+    images: images,
+    checklist: checklist,
+    updatedAt: new Date().toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }) + ' ' + new Date().toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  });
+
+  const autoSaveSnapshot = useMemo(() => JSON.stringify({
+    title,
+    content,
+    groupId,
+    images,
+    checklist
+  }), [title, content, groupId, images, checklist]);
+
+  useEffect(() => {
+    initialSnapshotRef.current = autoSaveSnapshot;
+    lastAutoSavedSnapshotRef.current = autoSaveSnapshot;
+  }, [note?.id]);
+
+  useEffect(() => {
+    if (!onAutoSave) return;
+    if (autoSaveSnapshot === initialSnapshotRef.current) return;
+    if (autoSaveSnapshot === lastAutoSavedSnapshotRef.current) return;
+    if (!title.trim() && !content.trim() && checklist.length === 0 && images.length === 0) return;
+
+    const timer = window.setTimeout(() => {
+      lastAutoSavedSnapshotRef.current = autoSaveSnapshot;
+      onAutoSave(buildNotePayload());
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [autoSaveSnapshot, onAutoSave, title, content, groupId, images, checklist]);
 
   const handleSave = () => {
     if (!title.trim()) {
       alert("메모 제목을 입력해 주세요.");
       return;
     }
-    onSave({
-      title: title.trim(),
-      content: content,
-      groupId: groupId,
-      images: images,
-      checklist: checklist,
-      updatedAt: new Date().toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }) + ' ' + new Date().toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    });
+    onSave(buildNotePayload());
   };
 
   const handleAddTodo = (e: React.FormEvent) => {
@@ -69,18 +102,18 @@ export default function NoteEditor({
         text: newTodoText.trim(),
         done: false
       };
-      setChecklist([...checklist, newItem]);
+      setChecklist(currentChecklist => [...currentChecklist, newItem]);
       setNewTodoText('');
     }
   };
 
   const handleRemoveTodo = (id: string) => {
-    setChecklist(checklist.filter(item => item.id !== id));
+    setChecklist(currentChecklist => currentChecklist.filter(item => item.id !== id));
   };
 
   const handleAddImage = (url: string) => {
     if (!images.includes(url)) {
-      setImages([...images, url]);
+      setImages(currentImages => [...currentImages, url]);
     }
     setShowImagePicker(false);
   };
@@ -103,7 +136,7 @@ export default function NoteEditor({
   };
 
   const handleRemoveImage = (url: string) => {
-    setImages(images.filter(img => img !== url));
+    setImages(currentImages => currentImages.filter(img => img !== url));
   };
 
   return (
@@ -168,7 +201,7 @@ export default function NoteEditor({
           
           {/* Core Content Textarea */}
           <textarea 
-            className="w-full min-h-[calc(100vh-300px)] bg-transparent border-none focus:outline-none focus:ring-0 p-0 text-on-surface font-sans text-base leading-8 resize-none"
+            className="w-full min-h-[40vh] md:min-h-[calc(100vh-360px)] bg-transparent border-none focus:outline-none focus:ring-0 p-0 text-on-surface font-sans text-base leading-8 resize-y"
             placeholder="여기에 내용을 입력하세요..."
             style={{ lineHeight: '28px' }}
             value={content}
@@ -220,45 +253,61 @@ export default function NoteEditor({
             </form>
           </div>
 
-        </div>
-      </div>
+          {/* Attachments stay in the document flow so they never cover checklist controls. */}
+          <div className="border-t border-grid-line pt-6">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-outline">
+                <ImageIcon className="h-4.5 w-4.5 text-primary" />
+                <span>파일 첨부</span>
+              </h4>
+              <span className="text-xs font-medium text-outline" aria-live="polite">
+                {images.length}개
+              </span>
+            </div>
 
-      {/* Premium Attachment Bar at the bottom */}
-      <footer className="bg-white/95 backdrop-blur-md border-t border-grid-line p-4 z-10 shrink-0">
-        <div className="w-full max-w-none mx-auto flex items-center gap-4">
-          {/* Dynamic Square Photo Picker Button */}
-          <div 
-            onClick={() => setShowImagePicker(true)}
-            className="flex-shrink-0 w-16 h-16 bg-surface-container-high rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-outline-variant cursor-pointer hover:bg-surface-container-highest hover:border-primary transition-colors text-primary"
-            title="이미지 추가"
-          >
-            <ImageIcon className="w-6 h-6 stroke-[1.5]" />
-            <span className="text-[10px] font-bold mt-1">첨부</span>
+            <div className="flex items-center gap-3 rounded-xl border border-outline-variant/30 bg-surface/70 p-3">
+              <button
+                type="button"
+                onClick={() => setShowImagePicker(true)}
+                className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-high text-primary transition-colors hover:border-primary hover:bg-surface-container-highest focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                title="이미지 추가"
+                aria-label="첨부 이미지 추가"
+              >
+                <ImageIcon className="h-5 w-5 stroke-[1.5]" />
+                <span className="mt-1 text-[10px] font-bold">첨부</span>
+              </button>
+
+              {images.length === 0 ? (
+                <p className="flex-1 text-xs font-medium text-outline">
+                  첨부된 사진이 없습니다. 필요할 때 이미지를 추가하세요.
+                </p>
+              ) : (
+                <div className="flex flex-1 gap-3 overflow-x-auto py-1 no-scrollbar" aria-label="첨부 이미지 목록">
+                  {images.map((imgUrl, index) => (
+                    <div key={imgUrl} className="group relative shrink-0">
+                      <img
+                        src={imgUrl}
+                        alt={`첨부 이미지 ${index + 1}`}
+                        className="h-14 w-14 rounded-xl border border-outline-variant object-cover shadow-sm"
+                        referrerPolicy="no-referrer"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(imgUrl)}
+                        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-white bg-error text-white shadow-md transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-error focus:ring-offset-2"
+                        aria-label={`첨부 이미지 ${index + 1} 제거`}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Slider list of attached thumbnails */}
-          {images.length === 0 ? (
-            <div className="flex-1 text-xs text-outline font-medium italic pl-2 select-none">
-              첨부된 사진이 없습니다. 첨부 버튼을 누르거나 펜 버튼을 눌러 스태프 일러스트를 삽입할 수 있습니다.
-            </div>
-          ) : (
-            <div className="flex-1 overflow-x-auto no-scrollbar flex gap-3 py-1">
-              {images.map((imgUrl, index) => (
-                <div key={index} className="relative group flex-shrink-0">
-                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-outline-variant shadow-sm bg-cover bg-center" style={{ backgroundImage: `url(${imgUrl})` }} />
-                  <button 
-                    onClick={() => handleRemoveImage(imgUrl)}
-                    className="absolute -top-1.5 -right-1.5 bg-error text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all text-xs border border-white cursor-pointer"
-                    title="제거"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
-      </footer>
+      </div>
 
       {/* Premium Digital Stationery Asset Selector Modal */}
       {showImagePicker && (
