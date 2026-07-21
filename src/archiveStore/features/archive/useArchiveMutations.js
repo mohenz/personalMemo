@@ -14,6 +14,21 @@ function getDeleteErrorMessage(error) {
   }
 }
 
+function getUploadErrorMessage(error) {
+  switch (error?.code) {
+    case 'storage/unauthorized':
+      return '스토리지 파일 업로드 권한이 없습니다. Firebase Storage Rules를 확인하세요.';
+    case 'permission-denied':
+      return '파일 목록 저장 권한이 없습니다. Firestore Rules를 확인하세요.';
+    case 'storage/canceled':
+      return '파일 업로드가 취소되었습니다.';
+    case 'storage/retry-limit-exceeded':
+      return '네트워크 문제로 파일 업로드를 완료하지 못했습니다. 잠시 후 다시 시도하세요.';
+    default:
+      return error?.message || '파일 업로드에 실패했습니다.';
+  }
+}
+
 export function useArchiveMutations({
   dataBackend,
   firebaseReady,
@@ -56,15 +71,19 @@ export function useArchiveMutations({
       return;
     }
 
-    for (const file of accepted) {
-      setMutationStatus(`${file.name} 업로드 준비`);
-      await uploadArchiveFile({
-        file,
-        userId,
-        onProgress: (progress) => setMutationStatus(`${file.name} ${progress}%`),
-      });
+    try {
+      for (const file of accepted) {
+        setMutationStatus(`${file.name} 업로드 준비`);
+        await uploadArchiveFile({
+          file,
+          userId,
+          onProgress: (progress) => setMutationStatus(`${file.name} ${progress}%`),
+        });
+      }
+      setMutationStatus('업로드 완료');
+    } catch (error) {
+      setMutationStatus(getUploadErrorMessage(error));
     }
-    setMutationStatus('업로드 완료');
   }
 
   async function deleteFiles(targetFiles, label) {

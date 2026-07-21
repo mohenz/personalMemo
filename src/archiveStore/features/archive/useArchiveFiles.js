@@ -4,9 +4,9 @@ import { fetchLocalFiles } from './localArchiveApi.js';
 import { subscribeFiles } from './archiveService.js';
 import { getEnv } from '../../core/env.js';
 
-export function useArchiveFiles(userId) {
+export function useArchiveFiles(userId, backendOverride = null) {
   const rawBackend = getEnv('VITE_DATA_BACKEND') || 'local-api';
-  const dataBackend = String(rawBackend).trim().replace(/^\uFEFF/g, '');
+  const dataBackend = backendOverride || String(rawBackend).trim().replace(/^\uFEFF/g, '');
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(dataBackend === 'firebase' ? isFirebaseConfigured : true);

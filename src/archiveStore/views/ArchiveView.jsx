@@ -10,7 +10,8 @@ import { ArchiveWorkspaceScreen } from './ArchiveWorkspaceScreen.jsx';
 
 export function ArchiveView({ integratedUser = null, onIntegratedLogout = null } = {}) {
   const rawBackend = getEnv('VITE_DATA_BACKEND') || 'local-api';
-  const dataBackend = String(rawBackend).trim().replace(/^\uFEFF/g, '');
+  const configuredBackend = String(rawBackend).trim().replace(/^\uFEFF/g, '');
+  const dataBackend = integratedUser ? 'firebase' : configuredBackend;
   const authState = useArchiveAuth({ dataBackend });
   const effectiveAuthState = integratedUser
     ? {
@@ -32,7 +33,7 @@ export function ArchiveView({ integratedUser = null, onIntegratedLogout = null }
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
-  const { files, setFiles, usedBytes, loading, error, firebaseReady } = useArchiveFiles(effectiveAuthState.userId);
+  const { files, setFiles, usedBytes, loading, error, firebaseReady } = useArchiveFiles(effectiveAuthState.userId, dataBackend);
   const listState = useArchiveListControls(files);
   const usedRatio = Math.min((usedBytes / archivePolicy.storageLimitBytes) * 100, 100);
   const mutations = useArchiveMutations({
