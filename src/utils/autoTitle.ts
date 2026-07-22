@@ -28,5 +28,9 @@ export function resolveNoteTitle({
   groups: Group[];
   title: string | undefined;
 }) {
-  return getAutoNoteTitle(groupId, groups) || title?.trim() || fallbackTitle;
+  const typedTitle = title?.trim();
+
+  if (typedTitle && typedTitle !== fallbackTitle) return typedTitle;
+
+  return getAutoNoteTitle(groupId, groups) || fallbackTitle;
 }

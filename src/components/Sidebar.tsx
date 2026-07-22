@@ -253,9 +253,12 @@ export default function Sidebar({
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[200] animate-fade-in-scale p-4">
           <form 
             onSubmit={handleCreateFolder}
-            className="bg-white p-6 rounded-2xl w-80 max-w-full shadow-2xl border border-outline-variant flex flex-col gap-4 select-text"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-folder-title"
+            className="bg-surface-container-lowest text-on-surface p-6 rounded-2xl w-80 max-w-full shadow-2xl border border-outline-variant flex flex-col gap-4 select-text"
           >
-            <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
+            <h3 id="add-folder-title" className="font-bold text-lg text-on-surface flex items-center gap-2">
               <FolderPlus className="w-5 h-5 text-primary" />
               <span>새 폴더 추가</span>
             </h3>
@@ -267,10 +270,11 @@ export default function Sidebar({
               autoFocus
               required
               maxLength={40}
+              aria-label="새 폴더 이름"
               placeholder="예: 아이디어, 영감, 미팅록"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
-              className="w-full h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-medium text-on-surface bg-white select-text"
+              className="w-full h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary font-medium text-on-surface placeholder:text-outline caret-primary bg-surface-container-low select-text"
             />
             <div className="flex items-center justify-end gap-2 text-sm font-semibold">
               <button

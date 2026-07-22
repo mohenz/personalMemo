@@ -22,15 +22,28 @@ describe('getAutoNoteTitle', () => {
 });
 
 describe('resolveNoteTitle', () => {
-  it('overrides a typed title when a project group is saved', () => {
+  it('keeps a typed title when a project group is saved', () => {
     vi.setSystemTime(new Date(2026, 6, 22, 10));
 
-    expect(resolveNoteTitle({ groupId: 'project', groups, title: '사용자 입력 제목' })).toBe('2026-07-22_프로젝트_일정');
+    expect(resolveNoteTitle({ groupId: 'project', groups, title: '사용자 입력 제목' })).toBe('사용자 입력 제목');
+
+    vi.useRealTimers();
+  });
+
+  it('uses an automatic title for an empty project title', () => {
+    vi.setSystemTime(new Date(2026, 6, 22, 10));
+
+    expect(resolveNoteTitle({ groupId: 'project', groups, title: '' })).toBe('2026-07-22_프로젝트_일정');
+    expect(resolveNoteTitle({ groupId: 'project', groups, title: '제목 없는 메모' })).toBe('2026-07-22_프로젝트_일정');
 
     vi.useRealTimers();
   });
 
   it('keeps the typed title for groups without an automatic title rule', () => {
     expect(resolveNoteTitle({ groupId: 'personal', groups, title: '개인 메모' })).toBe('개인 메모');
+  });
+
+  it('uses the fallback title when no typed or automatic title exists', () => {
+    expect(resolveNoteTitle({ groupId: 'personal', groups, title: '  ' })).toBe('제목 없는 메모');
   });
 });
