@@ -92,7 +92,10 @@ export default function CalendarView({
             </div>
           </div>
 
-          <div className="flex items-center bg-surface-container rounded-xl p-1" aria-label="캘린더 보기 방식">
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:justify-end">
+          <div className="flex items-center bg-surface-container rounded-xl p-1 shrink-0" aria-label="캘린더 보기 방식">
             {VIEW_OPTIONS.map((option) => (
               <button
                 type="button"
@@ -105,9 +108,7 @@ export default function CalendarView({
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 w-full md:justify-end">
           <div className="relative flex-1 md:flex-none">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
             <input

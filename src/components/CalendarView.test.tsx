@@ -45,3 +45,14 @@ describe('CalendarView month navigation', () => {
     expect(clampDayToMonth(29, 2028, 1)).toBe(29);
   });
 });
+
+describe('CalendarView toolbar layout', () => {
+  it('places the view controls immediately before memo search', () => {
+    vi.useFakeTimers();
+    const markup = renderCalendar(new Date(2026, 6, 23, 12));
+
+    expect(markup.indexOf('캘린더 보기 방식')).toBeLessThan(markup.indexOf('캘린더 메모 검색'));
+
+    vi.useRealTimers();
+  });
+});
