@@ -13,9 +13,11 @@ import {
   CheckSquare,
   Square,
   FolderOpen,
-  X
+  X,
+  Download
 } from 'lucide-react';
 import { Note, Group } from '../types';
+import { downloadMarkdownFile } from '../utils/markdownExport';
 
 interface NoteDetailProps {
   note: Note | null;
@@ -60,6 +62,10 @@ export default function NoteDetail({
     navigator.clipboard?.writeText(shareUrl);
     setShowShareToast(true);
     setTimeout(() => setShowShareToast(false), 2000);
+  };
+
+  const handleMarkdownDownload = () => {
+    downloadMarkdownFile(note, groups);
   };
 
   const handleDrawing = () => {
@@ -239,6 +245,15 @@ export default function NoteDetail({
         </button>
 
         <div className="w-[1px] h-6 bg-white/20" />
+
+        <button 
+          onClick={handleMarkdownDownload}
+          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          title="Markdown 다운로드"
+        >
+          <Download className="w-5 h-5" />
+          <span className="text-[10px] font-bold">다운로드</span>
+        </button>
 
         <button 
           onClick={handleShare}

@@ -42,6 +42,7 @@ import {
   uploadMemoProfileImage,
 } from './services/archiveIntegration';
 import { isFirebaseConfigured } from './firebase/client';
+import { resolveNoteTitle } from './utils/autoTitle';
 import { toLocalDateString } from './utils/date';
 
 const LEGACY_SAMPLE_NOTE_IDS = new Set([
@@ -305,10 +306,21 @@ export default function App() {
   };
 
   const handleSaveNote = (editedFields: Partial<Note>) => {
+    const savedGroupId = editedFields.groupId || editingNote?.groupId || 'personal';
+    const savedFields = {
+      ...editedFields,
+      groupId: savedGroupId,
+      title: resolveNoteTitle({
+        groupId: savedGroupId,
+        groups,
+        title: editedFields.title,
+      }),
+    };
+
     if (editingNote) {
       // Editing Mode
       setNotes(prev => prev.map(note => 
-        note.id === editingNote.id ? { ...note, ...editedFields } as Note : note
+        note.id === editingNote.id ? { ...note, ...savedFields } as Note : note
       ));
       setSelectedNoteId(editingNote.id);
     } else {
@@ -316,16 +328,16 @@ export default function App() {
       const dateStr = prefilledDate || toLocalDateString(); // Pre-filled or current local date
       const newNote: Note = {
         id: 'note-' + Date.now(),
-        title: editedFields.title || '제목 없는 메모',
-        content: editedFields.content || '',
-        groupId: editedFields.groupId || 'personal',
-        createdAt: editedFields.updatedAt || '',
-        updatedAt: editedFields.updatedAt || '',
+        title: savedFields.title || '제목 없는 메모',
+        content: savedFields.content || '',
+        groupId: savedFields.groupId || 'personal',
+        createdAt: savedFields.updatedAt || '',
+        updatedAt: savedFields.updatedAt || '',
         dateString: dateStr,
         isFavorite: false,
         isDeleted: false,
-        images: editedFields.images || [],
-        checklist: editedFields.checklist || []
+        images: savedFields.images || [],
+        checklist: savedFields.checklist || []
       };
       setNotes(prev => [newNote, ...prev]);
       setSelectedNoteId(newNote.id);

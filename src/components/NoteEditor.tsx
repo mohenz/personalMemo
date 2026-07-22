@@ -87,10 +87,6 @@ export default function NoteEditor({
   }, [autoSaveSnapshot, onAutoSave, title, content, groupId, images, checklist]);
 
   const handleSave = () => {
-    if (!title.trim()) {
-      alert("메모 제목을 입력해 주세요.");
-      return;
-    }
     onSave(buildNotePayload());
   };
 
