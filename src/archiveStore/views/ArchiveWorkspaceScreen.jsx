@@ -74,9 +74,8 @@ export function ArchiveWorkspaceScreen({
           {isFirebaseBackend && authUser && (
             <>
               <span>{authUser.email}</span>
-              <button className="icon-button logout-button" type="button" onClick={onLogout} title="MEMOry 로그아웃">
+              <button className="icon-button logout-button" type="button" onClick={onLogout} title="MEMOry 로그아웃" aria-label="MEMOry 로그아웃">
                 <LogOut size={18} aria-hidden="true" />
-                <span>로그아웃</span>
               </button>
             </>
           )}
