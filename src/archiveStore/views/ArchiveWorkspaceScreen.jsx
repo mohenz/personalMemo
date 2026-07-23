@@ -205,9 +205,13 @@ export function ArchiveWorkspaceScreen({
                       <span className={`file-badge ${file.category}`} aria-label={getFileInitial(file.category)} title={getFileInitial(file.category)}>
                         <FileIcon size={18} aria-hidden="true" />
                       </span>
-                      <strong>{file.filename}</strong>
-                      <span className="file-mime">{file.mimeType || '-'}</span>
-                      <small>{formatBytes(file.size)}</small>
+                      <span className="file-info">
+                        <strong className="file-filename" title={file.filename}>{file.filename}</strong>
+                        <span className="file-meta">
+                          <span className="file-mime">{file.mimeType || '-'}</span>
+                          <small>{formatBytes(file.size)}</small>
+                        </span>
+                      </span>
                     </button>
                   </div>
                 );
