@@ -19,3 +19,40 @@ test('renders the public entry without layout or runtime errors', async ({ page 
   expect(hasHorizontalOverflow).toBe(false);
   expect(pageErrors).toEqual([]);
 });
+
+test('keeps the archive content slot vertically scrollable', async ({ page }) => {
+  await page.goto('/');
+
+  const result = await page.evaluate(() => {
+    const root = document.querySelector('#root');
+    if (!root) return null;
+
+    root.innerHTML = `
+      <div style="height: 100vh; overflow: hidden;">
+        <div
+          data-testid="archive-scroll-container"
+          class="min-h-0 overflow-y-auto overscroll-contain custom-scrollbar"
+          style="height: 100%;"
+        >
+          <main style="height: 2000px;"></main>
+        </div>
+      </div>
+    `;
+
+    const container = root.querySelector('[data-testid="archive-scroll-container"]');
+    if (!(container instanceof HTMLElement)) return null;
+    container.scrollTop = 500;
+
+    return {
+      clientHeight: container.clientHeight,
+      overflowY: getComputedStyle(container).overflowY,
+      scrollHeight: container.scrollHeight,
+      scrollTop: container.scrollTop,
+    };
+  });
+
+  expect(result).not.toBeNull();
+  expect(result?.overflowY).toBe('auto');
+  expect(result?.scrollHeight).toBeGreaterThan(result?.clientHeight || 0);
+  expect(result?.scrollTop).toBeGreaterThan(0);
+});

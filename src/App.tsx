@@ -533,7 +533,7 @@ export default function App() {
             )}
 
             {screen === 'ARCHIVE' && (
-              <div className="flex-1 min-h-0 overflow-hidden bg-background">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar bg-background">
                 <ArchiveView integratedUser={archiveUser} onIntegratedLogout={logoutArchiveAccount} />
               </div>
             )}
