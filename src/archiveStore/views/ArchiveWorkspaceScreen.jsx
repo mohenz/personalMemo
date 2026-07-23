@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { File, FileQuestion, FileText, Grid2X2, Image, Layers, LogOut, Search, Trash2, UploadCloud, List, LayoutGrid, Sun, Moon } from 'lucide-react';
+import { Download, File, FileQuestion, FileText, Grid2X2, Image, Layers, LogOut, Search, Trash2, UploadCloud, List, LayoutGrid, Sun, Moon } from 'lucide-react';
 import { archivePolicy } from '../config/archivePolicy.js';
 import { formatBytes, getFileInitial } from '../core/fileTypes.js';
 import { FilePreviewModal } from './FilePreviewModal.jsx';
@@ -213,6 +213,19 @@ export function ArchiveWorkspaceScreen({
                         </span>
                       </span>
                     </button>
+                    {file.downloadUrl && (
+                      <a
+                        className="file-row-download"
+                        href={file.downloadUrl}
+                        download={file.filename}
+                        aria-label={`${file.filename} 다운로드`}
+                        title="다운로드"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <Download size={16} aria-hidden="true" />
+                        <span>다운로드</span>
+                      </a>
+                    )}
                   </div>
                 );
               })}
