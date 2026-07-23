@@ -223,7 +223,6 @@ export function ArchiveWorkspaceScreen({
                         onClick={(event) => event.stopPropagation()}
                       >
                         <Download size={16} aria-hidden="true" />
-                        <span>다운로드</span>
                       </a>
                     )}
                   </div>

@@ -711,17 +711,15 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  flex-shrink: 0;
+  width: 36px;
   min-height: 36px;
-  padding: 0 10px;
+  padding: 0;
   border: 1px solid #d8dee8;
   border-radius: 8px;
   background: #f8fafc;
   color: #1d4ed8;
-  font-size: 0.82rem;
-  font-weight: 700;
   text-decoration: none;
-  white-space: nowrap;
   transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -1037,15 +1035,6 @@ h1 {
   .file-row-download {
     width: 40px;
     padding: 0;
-  }
-
-  .file-row-download span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
   }
 
   .pagination {
