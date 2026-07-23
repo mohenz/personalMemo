@@ -7,6 +7,11 @@ import {
 } from '../../src/components/calendar/calendarUtils';
 import { resolveNoteTitle } from '../../src/utils/autoTitle';
 import { Note } from '../../src/types';
+import { koreanHolidays } from '../../src/features/holidays/koreanHolidays.generated';
+import {
+  groupKoreanHolidays,
+  mergeKasiHolidays,
+} from '../../src/features/holidays/koreanHolidayUtils';
 
 const groups = [
   { id: 'project', name: '프로젝트' },
@@ -62,6 +67,38 @@ describe('calendar filtering', () => {
 
     expect(result.get('2026-07-23')?.map((note) => note.id)).toEqual(['note-1']);
     expect(result.has('2026-07-24')).toBe(false);
+  });
+});
+
+describe('Korean holiday data', () => {
+  test('merges public and national categories for a legal national holiday', () => {
+    expect(mergeKasiHolidays(
+      [{ locdate: 20260301, dateName: '삼일절', isHoliday: 'Y' }],
+      [{ locdate: 20260301, dateName: '삼일절', isHoliday: 'Y' }],
+    )).toEqual([{
+      date: '2026-03-01',
+      name: '삼일절',
+      categories: ['public', 'national'],
+      isDayOff: true,
+    }]);
+  });
+
+  test('does not classify Labor Day as a national holiday', () => {
+    const holidays = mergeKasiHolidays(
+      [{ locdate: 20260501, dateName: '노동절', isHoliday: 'Y' }],
+      [{ locdate: 20260501, dateName: '노동절', isHoliday: 'Y' }],
+    );
+
+    expect(holidays[0].categories).toEqual(['public']);
+  });
+
+  test('contains the synchronized 2018 through 2027 holiday snapshot', () => {
+    const holidaysByDate = groupKoreanHolidays(koreanHolidays);
+
+    expect(koreanHolidays).toHaveLength(200);
+    expect(holidaysByDate.get('2026-07-17')).toEqual([
+      expect.objectContaining({ name: '제헌절', categories: ['public', 'national'] }),
+    ]);
   });
 });
 

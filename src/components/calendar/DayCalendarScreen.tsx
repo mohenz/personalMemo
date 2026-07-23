@@ -1,11 +1,14 @@
 import { Edit3, FolderOpen } from 'lucide-react';
 import { Group, Note } from '../../types';
+import HolidayBadges from '../../features/holidays/HolidayBadges';
+import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
 import { toLocalDateString } from '../../utils/date';
 import CalendarNoteCard from './CalendarNoteCard';
 
 interface DayCalendarScreenProps {
   selectedDate: Date;
   notes: Note[];
+  holidays: KoreanHoliday[];
   groups: Group[];
   onSelectNote: (noteId: string) => void;
   onAddNoteWithDate: (dateString: string) => void;
@@ -14,6 +17,7 @@ interface DayCalendarScreenProps {
 export default function DayCalendarScreen({
   selectedDate,
   notes,
+  holidays,
   groups,
   onSelectNote,
   onAddNoteWithDate,
@@ -27,6 +31,7 @@ export default function DayCalendarScreen({
             <h2 className="mt-1 text-xl font-bold text-on-surface">
               {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일
             </h2>
+            <HolidayBadges holidays={holidays} />
           </div>
           <span className="text-xs bg-surface-container-high px-3 py-1 rounded-full text-on-surface-variant font-bold">
             {notes.length}개

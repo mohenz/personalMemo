@@ -1,4 +1,7 @@
 import { Group, Note } from '../../types';
+import HolidayBadges from '../../features/holidays/HolidayBadges';
+import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
+import { getHolidayNames } from '../../features/holidays/koreanHolidayUtils';
 import { toLocalDateString } from '../../utils/date';
 import CalendarNoteCard from './CalendarNoteCard';
 import { getWeekDates, isSameLocalDate } from './calendarUtils';
@@ -6,6 +9,7 @@ import { getWeekDates, isSameLocalDate } from './calendarUtils';
 interface WeekCalendarScreenProps {
   selectedDate: Date;
   notesByDate: Map<string, Note[]>;
+  holidaysByDate: Map<string, KoreanHoliday[]>;
   groups: Group[];
   onSelectDate: (date: Date) => void;
   onSelectNote: (noteId: string) => void;
@@ -14,6 +18,7 @@ interface WeekCalendarScreenProps {
 export default function WeekCalendarScreen({
   selectedDate,
   notesByDate,
+  holidaysByDate,
   groups,
   onSelectDate,
   onSelectNote,
@@ -26,6 +31,7 @@ export default function WeekCalendarScreen({
         {getWeekDates(selectedDate).map((date) => {
           const dateString = toLocalDateString(date);
           const dayNotes = notesByDate.get(dateString) || [];
+          const dayHolidays = holidaysByDate.get(dateString) || [];
           const selected = isSameLocalDate(date, selectedDate);
           const currentDay = isSameLocalDate(date, today);
 
@@ -35,7 +41,7 @@ export default function WeekCalendarScreen({
                 type="button"
                 onClick={() => onSelectDate(date)}
                 className="sticky top-0 z-10 w-full px-3 py-3 bg-surface-container-low/95 backdrop-blur-sm border-b border-grid-line text-center cursor-pointer"
-                aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일 선택`}
+                aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일${dayHolidays.length > 0 ? `, ${getHolidayNames(dayHolidays)}` : ''} 선택`}
               >
                 <span className="block text-[10px] font-bold text-on-surface-variant">
                   {['일', '월', '화', '수', '목', '금', '토'][date.getDay()]}
@@ -43,6 +49,7 @@ export default function WeekCalendarScreen({
                 <span className={`mt-1 mx-auto w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold ${selected ? 'bg-primary text-white' : currentDay ? 'ring-2 ring-primary text-primary' : 'text-on-surface'}`}>
                   {date.getDate()}
                 </span>
+                <HolidayBadges holidays={dayHolidays} compact />
               </button>
 
               <div className="p-2 space-y-2">

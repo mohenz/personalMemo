@@ -10,8 +10,9 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test:vitest": "vitest run src",
-    "test:unit": "jest --runInBand",
-    "test:e2e": "node scripts/run-playwright.mjs"
+    "test:unit": "jest --config config/jest.config.cjs --runInBand",
+    "test:e2e": "node scripts/run-playwright.mjs",
+    "holidays:sync": "node scripts/sync-korean-holidays.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

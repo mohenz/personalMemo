@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import { Group, Note } from '../types';
 import { toLocalDateString } from '../utils/date';
+import { koreanHolidays } from '../features/holidays/koreanHolidays.generated';
+import { groupKoreanHolidays } from '../features/holidays/koreanHolidayUtils';
 import DayCalendarScreen from './calendar/DayCalendarScreen';
 import MonthCalendarScreen from './calendar/MonthCalendarScreen';
 import SelectedDayPanel from './calendar/SelectedDayPanel';
@@ -48,7 +50,10 @@ export default function CalendarView({
     () => groupCalendarNotes(notes, searchQuery),
     [notes, searchQuery],
   );
-  const selectedNotes = notesByDate.get(toLocalDateString(selectedDate)) || [];
+  const holidaysByDate = useMemo(() => groupKoreanHolidays(koreanHolidays), []);
+  const selectedDateString = toLocalDateString(selectedDate);
+  const selectedNotes = notesByDate.get(selectedDateString) || [];
+  const selectedHolidays = holidaysByDate.get(selectedDateString) || [];
 
   const movePeriod = (offset: number) => {
     setSelectedDate((date) => shiftCalendarDate(date, viewMode, offset));
@@ -137,6 +142,7 @@ export default function CalendarView({
           <DayCalendarScreen
             selectedDate={selectedDate}
             notes={selectedNotes}
+            holidays={selectedHolidays}
             groups={groups}
             onSelectNote={onSelectNote}
             onAddNoteWithDate={onAddNoteWithDate}
@@ -148,6 +154,7 @@ export default function CalendarView({
                 <MonthCalendarScreen
                   selectedDate={selectedDate}
                   notesByDate={notesByDate}
+                  holidaysByDate={holidaysByDate}
                   onSelectDate={setSelectedDate}
                   onSelectNote={onSelectNote}
                 />
@@ -155,6 +162,7 @@ export default function CalendarView({
                 <WeekCalendarScreen
                   selectedDate={selectedDate}
                   notesByDate={notesByDate}
+                  holidaysByDate={holidaysByDate}
                   groups={groups}
                   onSelectDate={setSelectedDate}
                   onSelectNote={onSelectNote}
@@ -165,6 +173,7 @@ export default function CalendarView({
             <SelectedDayPanel
               selectedDate={selectedDate}
               notes={selectedNotes}
+              holidays={selectedHolidays}
               groups={groups}
               onSelectNote={onSelectNote}
               onAddNoteWithDate={onAddNoteWithDate}

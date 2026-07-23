@@ -56,3 +56,15 @@ describe('CalendarView toolbar layout', () => {
     vi.useRealTimers();
   });
 });
+
+describe('CalendarView Korean holidays', () => {
+  it('renders an official public holiday on the selected date', () => {
+    vi.useFakeTimers();
+    const markup = renderCalendar(new Date(2026, 6, 17, 12));
+
+    expect(markup).toContain('제헌절');
+    expect(markup).toContain('대한민국 국경일 및 공휴일');
+
+    vi.useRealTimers();
+  });
+});

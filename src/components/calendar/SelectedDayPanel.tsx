@@ -1,11 +1,14 @@
 import { Edit3, FolderOpen } from 'lucide-react';
 import { Group, Note } from '../../types';
+import HolidayBadges from '../../features/holidays/HolidayBadges';
+import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
 import { toLocalDateString } from '../../utils/date';
 import CalendarNoteCard from './CalendarNoteCard';
 
 interface SelectedDayPanelProps {
   selectedDate: Date;
   notes: Note[];
+  holidays: KoreanHoliday[];
   groups: Group[];
   onSelectNote: (noteId: string) => void;
   onAddNoteWithDate: (dateString: string) => void;
@@ -14,6 +17,7 @@ interface SelectedDayPanelProps {
 export default function SelectedDayPanel({
   selectedDate,
   notes,
+  holidays,
   groups,
   onSelectNote,
   onAddNoteWithDate,
@@ -29,6 +33,7 @@ export default function SelectedDayPanel({
             {notes.length}개
           </span>
         </div>
+        <HolidayBadges holidays={holidays} />
 
         <div className="space-y-3 overflow-y-auto custom-scrollbar pr-1 flex-1">
           {notes.length === 0 ? (

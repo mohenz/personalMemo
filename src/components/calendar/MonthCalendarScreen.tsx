@@ -1,9 +1,13 @@
 import { Note } from '../../types';
+import HolidayBadges from '../../features/holidays/HolidayBadges';
+import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
+import { getHolidayNames } from '../../features/holidays/koreanHolidayUtils';
 import { getMonthCells, isSameLocalDate } from './calendarUtils';
 
 interface MonthCalendarScreenProps {
   selectedDate: Date;
   notesByDate: Map<string, Note[]>;
+  holidaysByDate: Map<string, KoreanHoliday[]>;
   onSelectDate: (date: Date) => void;
   onSelectNote: (noteId: string) => void;
 }
@@ -11,6 +15,7 @@ interface MonthCalendarScreenProps {
 export default function MonthCalendarScreen({
   selectedDate,
   notesByDate,
+  holidaysByDate,
   onSelectDate,
   onSelectNote,
 }: MonthCalendarScreenProps) {
@@ -33,6 +38,7 @@ export default function MonthCalendarScreen({
         <div className="grid grid-cols-7 auto-rows-[minmax(112px,1fr)]">
           {cells.map((cell) => {
             const dayNotes = notesByDate.get(cell.dateString) || [];
+            const dayHolidays = holidaysByDate.get(cell.dateString) || [];
             const selected = isSameLocalDate(cell.date, selectedDate);
             const currentDay = isSameLocalDate(cell.date, today);
             const weekday = cell.date.getDay();
@@ -46,13 +52,15 @@ export default function MonthCalendarScreen({
                   type="button"
                   onClick={() => onSelectDate(cell.date)}
                   className="flex justify-between items-start w-full cursor-pointer"
-                  aria-label={`${cell.date.getMonth() + 1}월 ${cell.date.getDate()}일, 메모 ${dayNotes.length}개`}
+                  aria-label={`${cell.date.getMonth() + 1}월 ${cell.date.getDate()}일${dayHolidays.length > 0 ? `, ${getHolidayNames(dayHolidays)}` : ''}, 메모 ${dayNotes.length}개`}
                 >
                   <span className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold ${selected ? 'bg-primary text-white shadow-soft' : currentDay ? 'ring-2 ring-primary text-primary' : weekday === 0 ? 'text-error' : weekday === 6 ? 'text-primary' : 'text-on-surface'}`}>
                     {cell.date.getDate()}
                   </span>
                   {dayNotes.length > 0 && <span className="w-1.5 h-1.5 bg-primary rounded-full shrink-0 mt-1" />}
                 </button>
+
+                <HolidayBadges holidays={dayHolidays} compact />
 
                 <div className="mt-auto pt-2 flex flex-col gap-1 w-full overflow-hidden">
                   {dayNotes.slice(0, 2).map((note) => (
