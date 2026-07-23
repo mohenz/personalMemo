@@ -12,7 +12,9 @@
     "test:vitest": "vitest run src",
     "test:unit": "jest --config config/jest.config.cjs --runInBand",
     "test:e2e": "node scripts/run-playwright.mjs",
-    "holidays:sync": "node scripts/sync-korean-holidays.mjs"
+    "holidays:sync": "node scripts/sync-korean-holidays.mjs",
+    "deploy:check": "git fetch origin && npm run lint && npm run test:vitest && npm run test:unit && npm run test:e2e && npm run build && node scripts/check-deployment.mjs",
+    "deploy:hosting": "npm run deploy:check && npx --yes firebase-tools@15.24.0 deploy --only hosting --project archive-store-fae71 && node scripts/verify-deployment.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
