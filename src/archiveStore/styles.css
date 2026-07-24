@@ -143,6 +143,12 @@ h1 {
   text-decoration: none;
 }
 
+.download-link-icon {
+  width: 40px;
+  padding: 0;
+  cursor: pointer;
+}
+
 .logout-button {
   font-weight: 700;
 }
@@ -837,6 +843,12 @@ h1 {
   border-color: #d8dee8;
   background: #fff;
   color: #202124;
+}
+
+.download-link-icon {
+  width: 40px;
+  padding: 0;
+  cursor: pointer;
 }
 
 .preview-body {

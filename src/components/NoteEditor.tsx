@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { 
   ArrowLeft, 
+  Clipboard,
   Save, 
   Image as ImageIcon, 
   MoreVertical, 
@@ -128,6 +129,61 @@ export default function NoteEditor({
       setUploadStatus('자료실 Storage에 업로드했습니다.');
     } catch (error) {
       setUploadStatus(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.');
+    }
+  };
+
+  const buildClipboardImageFile = (blob: Blob) => {
+    const extension = blob.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+    return new File([blob], `clipboard-image-${Date.now()}.${extension}`, {
+      type: blob.type || 'image/png'
+    });
+  };
+
+  const uploadClipboardBlob = async (blob: Blob | null) => {
+    if (!blob || !blob.type.startsWith('image/')) {
+      setUploadStatus('클립보드에서 이미지 파일을 찾을 수 없습니다.');
+      return;
+    }
+
+    await handleUploadImageFile(buildClipboardImageFile(blob));
+  };
+
+  const handleUploadClipboardImage = async () => {
+    if (!navigator.clipboard?.read) {
+      setUploadStatus('이 브라우저에서는 클립보드 이미지 읽기를 지원하지 않습니다. Ctrl+V 붙여넣기를 사용해 주세요.');
+      return;
+    }
+
+    setUploadStatus('클립보드 이미지를 확인하는 중입니다.');
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const item of clipboardItems) {
+        const imageType = item.types.find(type => type.startsWith('image/'));
+        if (imageType) {
+          await uploadClipboardBlob(await item.getType(imageType));
+          return;
+        }
+      }
+      setUploadStatus('클립보드에서 이미지 파일을 찾을 수 없습니다.');
+    } catch (error) {
+      setUploadStatus(error instanceof Error ? error.message : '클립보드 이미지를 읽지 못했습니다. 브라우저 권한을 확인해 주세요.');
+    }
+  };
+
+  const handlePasteImage = async (event: React.ClipboardEvent<HTMLDivElement>) => {
+    const pastedFiles = Array.from(event.clipboardData.files) as File[];
+    const imageFile = pastedFiles.find(file => file.type.startsWith('image/'));
+    if (imageFile) {
+      event.preventDefault();
+      await handleUploadImageFile(imageFile);
+      return;
+    }
+
+    const pastedItems = Array.from(event.clipboardData.items) as DataTransferItem[];
+    const imageItem = pastedItems.find(item => item.type.startsWith('image/'));
+    if (imageItem) {
+      event.preventDefault();
+      await uploadClipboardBlob(imageItem.getAsFile());
     }
   };
 
@@ -308,7 +364,10 @@ export default function NoteEditor({
       {/* Premium Digital Stationery Asset Selector Modal */}
       {showImagePicker && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 animate-fade-in-scale">
-          <div className="bg-white p-6 rounded-xl w-[480px] max-w-[calc(100vw-2rem)] shadow-2xl border border-outline-variant flex flex-col gap-4">
+          <div
+            className="bg-white p-6 rounded-xl w-[480px] max-w-[calc(100vw-2rem)] shadow-2xl border border-outline-variant flex flex-col gap-4"
+            onPaste={handlePasteImage}
+          >
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-primary" />
@@ -336,6 +395,15 @@ export default function NoteEditor({
                 onChange={(event) => handleUploadImageFile(event.target.files?.[0])}
               />
             </label>
+            <button
+              type="button"
+              onClick={handleUploadClipboardImage}
+              className="border border-outline-variant rounded-xl p-4 flex items-center justify-center gap-2 text-primary hover:bg-primary/5 transition-colors font-bold text-xs"
+              title="클립보드 이미지를 업로드합니다. Ctrl+V로도 붙여넣을 수 있습니다."
+            >
+              <Clipboard className="w-5 h-5" />
+              <span>클립보드 이미지 업로드</span>
+            </button>
             {uploadStatus && <p className="text-xs font-semibold text-primary">{uploadStatus}</p>}
 
             <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-[300px] p-1 custom-scrollbar">
