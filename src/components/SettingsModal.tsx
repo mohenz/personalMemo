@@ -82,6 +82,8 @@ export default function SettingsModal({
         <div className="flex overflow-x-auto no-scrollbar border-b border-grid-line dark:border-outline/10 px-6 bg-surface-container-low dark:bg-surface-container-lowest shrink-0">
           <button
             onClick={() => setActiveTab('profile')}
+            title="프로필 이미지 변경"
+            aria-label="프로필 이미지 변경"
             className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === 'profile'
                 ? 'border-primary text-primary'
@@ -89,10 +91,12 @@ export default function SettingsModal({
             }`}
           >
             <User className="w-4 h-4" />
-            <span>프로필 이미지 변경</span>
+            <span className="hidden md:inline">프로필 이미지 변경</span>
           </button>
           <button
             onClick={() => setActiveTab('theme')}
+            title="화면 테마 설정"
+            aria-label="화면 테마 설정"
             className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === 'theme'
                 ? 'border-primary text-primary'
@@ -100,10 +104,12 @@ export default function SettingsModal({
             }`}
           >
             <Sun className="w-4 h-4" />
-            <span>화면 테마 설정</span>
+            <span className="hidden md:inline">화면 테마 설정</span>
           </button>
           <button
             onClick={() => setActiveTab('archive')}
+            title="자료실 계정"
+            aria-label="자료실 계정"
             className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === 'archive'
                 ? 'border-primary text-primary'
@@ -111,7 +117,7 @@ export default function SettingsModal({
             }`}
           >
             <Cloud className="w-4 h-4" />
-            <span>자료실 계정</span>
+            <span className="hidden md:inline">자료실 계정</span>
           </button>
         </div>
 
