@@ -62,9 +62,18 @@ const LEGACY_SAMPLE_NOTE_IDS = new Set([
 
 const LEGACY_SAMPLE_GROUP_IDS = new Set(['work', 'personal', 'travel']);
 
+const SPLASH_SESSION_KEY = 'memory_splash_shown';
+
+function getInitialScreen(): ScreenType {
+  if (typeof window === 'undefined') return 'SPLASH';
+  if (window.sessionStorage.getItem(SPLASH_SESSION_KEY) === '1') return 'DASHBOARD';
+  window.sessionStorage.setItem(SPLASH_SESSION_KEY, '1');
+  return 'SPLASH';
+}
+
 export default function App() {
   // --- Screen State Control ---
-  const [screen, setScreen] = useState<ScreenType>('SPLASH');
+  const [screen, setScreen] = useState<ScreenType>(getInitialScreen);
 
   // --- Settings & Theme States ---
   const [profileImage, setProfileImage] = useState<string>(PREMIUM_IMAGES.userProfile);
@@ -701,17 +710,21 @@ export default function App() {
 
         {/* Mobile layout (below 768px) */}
         <div className="flex md:hidden h-screen w-full overflow-hidden bg-background">
-          {screen === 'DASHBOARD' && (
+          {/* Kept mounted (hidden via CSS, not unmounted) so tab/detail state survives a round trip to EDITOR */}
+          <div className={screen === 'DASHBOARD' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
             <MobileAppShell
               notes={notes}
               groups={groups}
               selectedNote={selectedNote}
               onSelectNote={setSelectedNoteId}
               onAddNote={() => handleStartAddNote()}
+              onAddNoteWithDate={(date) => handleStartAddNote(date)}
               onEditNote={handleStartEditNote}
               userId={archiveUser.uid}
+              profileImage={profileImage}
+              onOpenSettings={() => setShowSettingsModal(true)}
             />
-          )}
+          </div>
 
           {screen === 'EDITOR' && (
             <MobileNoteEditorScreen

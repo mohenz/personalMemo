@@ -7,9 +7,17 @@ interface MobileNoteListScreenProps {
   notes: Note[];
   onSelectNote: (id: string) => void;
   onAddNote: () => void;
+  profileImage: string;
+  onOpenSettings: () => void;
 }
 
-export default function MobileNoteListScreen({ notes, onSelectNote, onAddNote }: MobileNoteListScreenProps) {
+export default function MobileNoteListScreen({
+  notes,
+  onSelectNote,
+  onAddNote,
+  profileImage,
+  onOpenSettings,
+}: MobileNoteListScreenProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -55,6 +63,15 @@ export default function MobileNoteListScreen({ notes, onSelectNote, onAddNote }:
           </div>
         ) : (
           <>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="w-9 h-9 shrink-0 rounded-full overflow-hidden border border-outline-variant"
+              aria-label="설정"
+              title="설정"
+            >
+              <img src={profileImage} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            </button>
             <h1 className="flex-1 text-lg font-bold text-primary truncate">MEMOry</h1>
             <button
               type="button"

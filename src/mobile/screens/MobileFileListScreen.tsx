@@ -43,6 +43,8 @@ interface MobileFileListScreenProps {
   uploadProgress: number;
   uploadFailed: boolean;
   onRetryUpload: () => void;
+  profileImage: string;
+  onOpenSettings: () => void;
 }
 
 export default function MobileFileListScreen({
@@ -54,6 +56,8 @@ export default function MobileFileListScreen({
   uploadProgress,
   uploadFailed,
   onRetryUpload,
+  profileImage,
+  onOpenSettings,
 }: MobileFileListScreenProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -93,6 +97,15 @@ export default function MobileFileListScreen({
           </div>
         ) : (
           <>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="w-9 h-9 shrink-0 rounded-full overflow-hidden border border-outline-variant"
+              aria-label="설정"
+              title="설정"
+            >
+              <img src={profileImage} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            </button>
             <h1 className="flex-1 text-lg font-bold text-primary truncate">파일</h1>
             <button
               type="button"

@@ -27,6 +27,8 @@ describe('MobileFileListScreen', () => {
         uploadProgress={0}
         uploadFailed={false}
         onRetryUpload={noop}
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={noop}
       />
     );
 
@@ -45,6 +47,8 @@ describe('MobileFileListScreen', () => {
         uploadProgress={0}
         uploadFailed={false}
         onRetryUpload={noop}
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={noop}
       />
     );
 
@@ -63,6 +67,8 @@ describe('MobileFileListScreen', () => {
         uploadProgress={40}
         uploadFailed={false}
         onRetryUpload={noop}
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={noop}
       />
     );
 
@@ -82,6 +88,8 @@ describe('MobileFileListScreen', () => {
         uploadProgress={0}
         uploadFailed
         onRetryUpload={noop}
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={noop}
       />
     );
 

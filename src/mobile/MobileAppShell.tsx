@@ -5,6 +5,7 @@ import MobileNoteListScreen from './screens/MobileNoteListScreen';
 import MobileNoteDetailScreen from './screens/MobileNoteDetailScreen';
 import MobileFileListScreen, { ArchiveFile } from './screens/MobileFileListScreen';
 import MobileFilePreviewScreen from './screens/MobileFilePreviewScreen';
+import CalendarView from '../components/CalendarView';
 import { useArchiveFiles } from '../archiveStore/features/archive/useArchiveFiles.js';
 import { useArchiveMutations } from '../archiveStore/features/archive/useArchiveMutations.js';
 
@@ -22,8 +23,11 @@ interface MobileAppShellProps {
   selectedNote: Note | null;
   onSelectNote: (id: string) => void;
   onAddNote: () => void;
+  onAddNoteWithDate: (dateString: string) => void;
   onEditNote: (note: Note) => void;
   userId: string;
+  profileImage: string;
+  onOpenSettings: () => void;
 }
 
 export default function MobileAppShell({
@@ -32,8 +36,11 @@ export default function MobileAppShell({
   selectedNote,
   onSelectNote,
   onAddNote,
+  onAddNoteWithDate,
   onEditNote,
   userId,
+  profileImage,
+  onOpenSettings,
 }: MobileAppShellProps) {
   const [activeTab, setActiveTab] = useState<MobileTab>('NOTES');
   const [noteView, setNoteView] = useState<NoteView>('LIST');
@@ -81,6 +88,12 @@ export default function MobileAppShell({
     setNoteView('DETAIL');
   };
 
+  const handleSelectNoteFromCalendar = (id: string) => {
+    onSelectNote(id);
+    setActiveTab('NOTES');
+    setNoteView('DETAIL');
+  };
+
   const handleUploadFile = (file: File) => {
     setUploadingFile(file);
     setUploadFailed(false);
@@ -102,7 +115,13 @@ export default function MobileAppShell({
     <div className="flex-1 flex flex-col min-h-0 w-full bg-background">
       {activeTab === 'NOTES' &&
         (noteView === 'LIST' ? (
-          <MobileNoteListScreen notes={notes} onSelectNote={handleSelectNote} onAddNote={onAddNote} />
+          <MobileNoteListScreen
+            notes={notes}
+            onSelectNote={handleSelectNote}
+            onAddNote={onAddNote}
+            profileImage={profileImage}
+            onOpenSettings={onOpenSettings}
+          />
         ) : (
           <MobileNoteDetailScreen
             note={selectedNote}
@@ -111,6 +130,30 @@ export default function MobileAppShell({
             onEdit={() => selectedNote && onEditNote(selectedNote)}
           />
         ))}
+
+      {activeTab === 'CALENDAR' && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex items-center h-11 px-4 border-b border-grid-line bg-background shrink-0">
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="w-9 h-9 shrink-0 rounded-full overflow-hidden border border-outline-variant"
+              aria-label="설정"
+              title="설정"
+            >
+              <img src={profileImage} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            </button>
+          </div>
+          <div className="flex-1 min-h-0">
+            <CalendarView
+              notes={notes}
+              groups={groups}
+              onSelectNote={handleSelectNoteFromCalendar}
+              onAddNoteWithDate={onAddNoteWithDate}
+            />
+          </div>
+        </div>
+      )}
 
       {activeTab === 'FILES' &&
         (fileView === 'LIST' || !selectedFile ? (
@@ -123,6 +166,8 @@ export default function MobileAppShell({
             uploadProgress={uploadProgress}
             uploadFailed={uploadFailed}
             onRetryUpload={handleRetryUpload}
+            profileImage={profileImage}
+            onOpenSettings={onOpenSettings}
           />
         ) : (
           <MobileFilePreviewScreen file={selectedFile} onBack={() => setFileView('LIST')} />

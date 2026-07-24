@@ -23,7 +23,13 @@ const buildNote = (overrides: Partial<Note> = {}): Note => ({
 describe('MobileNoteListScreen', () => {
   it('renders note title, body preview and the add-note action', () => {
     const markup = renderToStaticMarkup(
-      <MobileNoteListScreen notes={[buildNote()]} onSelectNote={() => undefined} onAddNote={() => undefined} />
+      <MobileNoteListScreen
+        notes={[buildNote()]}
+        onSelectNote={() => undefined}
+        onAddNote={() => undefined}
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={() => undefined}
+      />
     );
 
     expect(markup).toContain('MEMOry');
@@ -34,7 +40,13 @@ describe('MobileNoteListScreen', () => {
 
   it('shows the empty-list message when there are no active notes', () => {
     const markup = renderToStaticMarkup(
-      <MobileNoteListScreen notes={[]} onSelectNote={() => undefined} onAddNote={() => undefined} />
+      <MobileNoteListScreen
+        notes={[]}
+        onSelectNote={() => undefined}
+        onAddNote={() => undefined}
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={() => undefined}
+      />
     );
 
     expect(markup).toContain('메모가 없습니다');
@@ -46,6 +58,8 @@ describe('MobileNoteListScreen', () => {
         notes={[buildNote({ isDeleted: true })]}
         onSelectNote={() => undefined}
         onAddNote={() => undefined}
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={() => undefined}
       />
     );
 
@@ -94,13 +108,17 @@ describe('MobileAppShell', () => {
         selectedNote={null}
         onSelectNote={() => undefined}
         onAddNote={() => undefined}
+        onAddNoteWithDate={() => undefined}
         onEditNote={() => undefined}
         userId="test-user"
+        profileImage="https://example.com/avatar.png"
+        onOpenSettings={() => undefined}
       />
     );
 
     expect(markup).toContain('회의 아이디어');
     expect(markup).toContain('메모');
+    expect(markup).toContain('캘린더');
     expect(markup).toContain('파일');
   });
 });

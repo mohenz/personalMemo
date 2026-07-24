@@ -79,10 +79,10 @@ export default function SettingsModal({
         </header>
 
         {/* Tab Selection */}
-        <div className="flex border-b border-grid-line dark:border-outline/10 px-6 bg-surface-container-low dark:bg-surface-container-lowest shrink-0">
+        <div className="flex overflow-x-auto no-scrollbar border-b border-grid-line dark:border-outline/10 px-6 bg-surface-container-low dark:bg-surface-container-lowest shrink-0">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === 'profile'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
@@ -93,7 +93,7 @@ export default function SettingsModal({
           </button>
           <button
             onClick={() => setActiveTab('theme')}
-            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === 'theme'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
@@ -104,7 +104,7 @@ export default function SettingsModal({
           </button>
           <button
             onClick={() => setActiveTab('archive')}
-            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === 'archive'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-on-surface-variant hover:text-on-surface'
