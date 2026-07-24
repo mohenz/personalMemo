@@ -30,6 +30,8 @@ import SearchView from './components/SearchView';
 import CalendarView from './components/CalendarView';
 import SettingsModal from './components/SettingsModal';
 import { ArchiveView } from './archiveStore/views/ArchiveView.jsx';
+import MobileAppShell from './mobile/MobileAppShell';
+import MobileNoteEditorScreen from './mobile/screens/MobileNoteEditorScreen';
 import './archiveStore/styles.css';
 import {
   loadMemoCloudState,
@@ -458,6 +460,56 @@ export default function App() {
     </main>
   );
 
+  // Screens shared by desktop and mobile layouts (rendered without the desktop sidebar on mobile)
+  const renderOverlayScreen = () => (
+    <>
+      {screen === 'EDITOR' && (
+        <NoteEditor
+          note={editingNote}
+          groups={groups}
+          onSave={handleSaveNote}
+          onAutoSave={handleAutoSaveNote}
+          onUploadImage={archiveUser ? (file) => uploadMemoImage(archiveUser.uid, file) : undefined}
+          onCancel={() => {
+            draftNoteIdRef.current = null;
+            setPrefilledDate(null);
+            setScreen('DASHBOARD');
+          }}
+        />
+      )}
+
+      {screen === 'SEARCH' && (
+        <SearchView
+          notes={notes}
+          groups={groups}
+          onSelectNote={(id) => {
+            setSelectedNoteId(id);
+            setScreen('DASHBOARD');
+          }}
+          onAddNote={() => handleStartAddNote()}
+        />
+      )}
+
+      {screen === 'CALENDAR' && (
+        <CalendarView
+          notes={notes}
+          groups={groups}
+          onSelectNote={(id) => {
+            setSelectedNoteId(id);
+            setScreen('DASHBOARD');
+          }}
+          onAddNoteWithDate={(date) => handleStartAddNote(date)}
+        />
+      )}
+
+      {screen === 'ARCHIVE' && (
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar bg-background">
+          <ArchiveView integratedUser={archiveUser} onIntegratedLogout={logoutArchiveAccount} />
+        </div>
+      )}
+    </>
+  );
+
   // --- Render Router ---
   return (
     <div className={`flex w-full h-screen bg-background text-on-surface font-sans overflow-hidden ${darkMode ? 'dark' : ''}`}>
@@ -471,10 +523,12 @@ export default function App() {
 
       {/* Main app layouts */}
       {screen !== 'SPLASH' && archiveUser && !authLoading && (
-        <div className="flex flex-col lg:flex-row h-screen w-full overflow-hidden">
-          
+        <>
+        {/* Desktop / tablet layout (768px and up) */}
+        <div className="hidden md:flex md:flex-col lg:flex-row h-screen w-full overflow-hidden">
+
           {/* Left Sidebar Pane */}
-          <Sidebar 
+          <Sidebar
             currentScreen={screen}
             setScreen={setScreen}
             groups={groups}
@@ -489,54 +543,8 @@ export default function App() {
 
           {/* Right Screens dynamic layout */}
           <div className="flex-1 flex flex-col min-h-0 bg-background relative">
-            
-            {/* Editor Mode Screen */}
-            {screen === 'EDITOR' && (
-              <NoteEditor 
-                note={editingNote}
-                groups={groups}
-                onSave={handleSaveNote}
-                onAutoSave={handleAutoSaveNote}
-                onUploadImage={archiveUser ? (file) => uploadMemoImage(archiveUser.uid, file) : undefined}
-                onCancel={() => {
-                  draftNoteIdRef.current = null;
-                  setPrefilledDate(null);
-                  setScreen('DASHBOARD');
-                }}
-              />
-            )}
 
-            {/* Search Mode Screen */}
-            {screen === 'SEARCH' && (
-              <SearchView 
-                notes={notes}
-                groups={groups}
-                onSelectNote={(id) => {
-                  setSelectedNoteId(id);
-                  setScreen('DASHBOARD');
-                }}
-                onAddNote={() => handleStartAddNote()}
-              />
-            )}
-
-            {/* Calendar Mode Screen */}
-            {screen === 'CALENDAR' && (
-              <CalendarView 
-                notes={notes}
-                groups={groups}
-                onSelectNote={(id) => {
-                  setSelectedNoteId(id);
-                  setScreen('DASHBOARD');
-                }}
-                onAddNoteWithDate={(date) => handleStartAddNote(date)}
-              />
-            )}
-
-            {screen === 'ARCHIVE' && (
-              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar bg-background">
-                <ArchiveView integratedUser={archiveUser} onIntegratedLogout={logoutArchiveAccount} />
-              </div>
-            )}
+            {renderOverlayScreen()}
 
             {/* Main Dashboard Screen (List & Reading Pane Split) */}
             {screen === 'DASHBOARD' && (
@@ -690,6 +698,40 @@ export default function App() {
           </div>
 
         </div>
+
+        {/* Mobile layout (below 768px) */}
+        <div className="flex md:hidden h-screen w-full overflow-hidden bg-background">
+          {screen === 'DASHBOARD' && (
+            <MobileAppShell
+              notes={notes}
+              groups={groups}
+              selectedNote={selectedNote}
+              onSelectNote={setSelectedNoteId}
+              onAddNote={() => handleStartAddNote()}
+              onEditNote={handleStartEditNote}
+              userId={archiveUser.uid}
+            />
+          )}
+
+          {screen === 'EDITOR' && (
+            <MobileNoteEditorScreen
+              note={editingNote}
+              onAutoSave={handleAutoSaveNote}
+              onBack={() => {
+                draftNoteIdRef.current = null;
+                setPrefilledDate(null);
+                setScreen('DASHBOARD');
+              }}
+            />
+          )}
+
+          {screen !== 'DASHBOARD' && screen !== 'EDITOR' && (
+            <div className="flex-1 flex flex-col min-h-0">
+              {renderOverlayScreen()}
+            </div>
+          )}
+        </div>
+        </>
       )}
 
       {/* Ambient paper texture layer across the entire app */}
