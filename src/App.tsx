@@ -391,7 +391,7 @@ export default function App() {
   };
 
   const renderUnifiedAuth = () => (
-    <main className="relative w-full h-screen bg-background text-on-surface flex items-center justify-center overflow-hidden px-4">
+    <main className="relative w-full h-dvh bg-background text-on-surface flex items-center justify-center overflow-hidden px-4">
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
@@ -521,7 +521,7 @@ export default function App() {
 
   // --- Render Router ---
   return (
-    <div className={`flex w-full h-screen bg-background text-on-surface font-sans overflow-hidden ${darkMode ? 'dark' : ''}`}>
+    <div className={`flex w-full h-dvh bg-background text-on-surface font-sans overflow-hidden ${darkMode ? 'dark' : ''}`}>
       
       {/* 1. Splash Screen Mode */}
       {screen === 'SPLASH' && (
@@ -534,7 +534,7 @@ export default function App() {
       {screen !== 'SPLASH' && archiveUser && !authLoading && (
         <>
         {/* Desktop / tablet layout (768px and up) */}
-        <div className="hidden md:flex md:flex-col lg:flex-row h-screen w-full overflow-hidden">
+        <div className="hidden md:flex md:flex-col lg:flex-row h-dvh w-full overflow-hidden">
 
           {/* Left Sidebar Pane */}
           <Sidebar
@@ -709,7 +709,7 @@ export default function App() {
         </div>
 
         {/* Mobile layout (below 768px) */}
-        <div className="flex md:hidden h-screen w-full overflow-hidden bg-background">
+        <div className="flex md:hidden h-dvh w-full overflow-hidden bg-background">
           {/* Kept mounted (hidden via CSS, not unmounted) so tab/detail state survives a round trip to EDITOR */}
           <div className={screen === 'DASHBOARD' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
             <MobileAppShell

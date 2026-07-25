@@ -14,7 +14,7 @@ export default function SplashView({ onComplete }: SplashViewProps) {
   }, [onComplete]);
 
   return (
-    <main className="relative w-full h-screen flex flex-col items-center justify-center bg-white overflow-hidden select-none">
+    <main className="relative w-full h-dvh flex flex-col items-center justify-center bg-white overflow-hidden select-none">
       {/* Subtle Paper Texture Overlay */}
       <div 
         className="absolute inset-0 opacity-[0.03] pointer-events-none" 
