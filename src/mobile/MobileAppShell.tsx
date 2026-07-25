@@ -112,7 +112,7 @@ export default function MobileAppShell({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 w-full bg-background">
+    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden bg-background">
       {activeTab === 'NOTES' &&
         (noteView === 'LIST' ? (
           <MobileNoteListScreen

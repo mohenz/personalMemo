@@ -74,7 +74,7 @@ export default function MobileFileListScreen({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 relative">
+    <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
       <header className="flex items-center gap-2 h-14 px-4 border-b border-grid-line bg-background shrink-0">
         {searchOpen ? (
           <div className="flex-1 flex items-center gap-2">
@@ -110,16 +110,16 @@ export default function MobileFileListScreen({
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container"
+              className="w-11 h-11 flex items-center justify-center rounded-full text-primary hover:bg-surface-container"
               aria-label="파일 검색"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-5 h-5 stroke-[2.5]" />
             </button>
           </>
         )}
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pb-20">
         {!loading && visibleFiles.length === 0 ? (
           <MobileEmptyState message={query.trim() ? '검색 결과가 없습니다' : '파일이 없습니다'} />
         ) : (
@@ -175,7 +175,7 @@ export default function MobileFileListScreen({
       )}
 
       <label
-        className="absolute bottom-4 right-4 w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform cursor-pointer"
+        className="absolute bottom-4 right-4 z-20 w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform cursor-pointer"
         aria-label="파일 업로드"
       >
         <Upload className="w-6 h-6" />

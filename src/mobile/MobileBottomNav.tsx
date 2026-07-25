@@ -17,7 +17,7 @@ const TABS: Array<{ id: MobileTab; label: string; Icon: React.ElementType }> = [
 export default function MobileBottomNav({ activeTab, onChangeTab }: MobileBottomNavProps) {
   return (
     <nav
-      className="flex items-stretch border-t border-grid-line bg-background shrink-0"
+      className="relative z-30 flex items-stretch border-t border-grid-line bg-background shrink-0"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {TABS.map(({ id, label, Icon }) => (

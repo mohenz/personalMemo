@@ -34,6 +34,9 @@ describe('MobileFileListScreen', () => {
 
     expect(markup).toContain('회의록.pdf');
     expect(markup).toContain('KB');
+    expect(markup).toContain('flex-1 flex flex-col min-h-0 relative overflow-hidden');
+    expect(markup).toContain('overflow-y-auto custom-scrollbar pb-20');
+    expect(markup).toContain('absolute bottom-4 right-4 z-20');
   });
 
   it('shows the empty-list message when there are no files', () => {
