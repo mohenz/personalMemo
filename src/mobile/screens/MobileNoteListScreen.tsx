@@ -109,7 +109,7 @@ export default function MobileNoteListScreen({
         <button
           type="button"
           onClick={onAddNote}
-          className="fixed bottom-20 right-4 w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
+          className="absolute bottom-4 right-4 w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
           aria-label="새 메모 작성"
         >
           <Plus className="w-6 h-6" />

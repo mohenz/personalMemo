@@ -151,7 +151,7 @@ export default function MobileFileListScreen({
       </div>
 
       {uploadingFile && (
-        <div className="fixed bottom-36 left-4 right-4 z-30 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-2xl p-3">
+        <div className="absolute bottom-20 left-4 right-4 z-30 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-2xl p-3">
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="text-xs font-bold text-on-surface truncate">{uploadingFile.name}</span>
             <span className="text-[11px] font-semibold text-on-surface-variant shrink-0">
@@ -175,7 +175,7 @@ export default function MobileFileListScreen({
       )}
 
       <label
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform cursor-pointer"
+        className="absolute bottom-4 right-4 w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform cursor-pointer"
         aria-label="파일 업로드"
       >
         <Upload className="w-6 h-6" />
