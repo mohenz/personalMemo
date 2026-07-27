@@ -1,34 +1,40 @@
-import { Group, Note } from '../../types';
+import { Note, Schedule } from '../../types';
 import HolidayBadges from '../../features/holidays/HolidayBadges';
 import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
 import { getHolidayNames } from '../../features/holidays/koreanHolidayUtils';
 import { toLocalDateString } from '../../utils/date';
-import CalendarNoteCard from './CalendarNoteCard';
+import CalendarNoteDots from './CalendarNoteDots';
+import TimeGrid from './TimeGrid';
 import { getWeekDates, isSameLocalDate } from './calendarUtils';
 
 interface WeekCalendarScreenProps {
   selectedDate: Date;
   notesByDate: Map<string, Note[]>;
+  schedulesByDate: Map<string, Schedule[]>;
   holidaysByDate: Map<string, KoreanHoliday[]>;
-  groups: Group[];
   onSelectDate: (date: Date) => void;
   onSelectNote: (noteId: string) => void;
+  onSelectSchedule: (schedule: Schedule) => void;
+  onCreateSchedule: (dateString: string, startTime: string) => void;
 }
 
 export default function WeekCalendarScreen({
   selectedDate,
   notesByDate,
+  schedulesByDate,
   holidaysByDate,
-  groups,
   onSelectDate,
   onSelectNote,
+  onSelectSchedule,
+  onCreateSchedule,
 }: WeekCalendarScreenProps) {
   const today = new Date();
+  const weekDates = getWeekDates(selectedDate);
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6 no-scrollbar">
-      <div className="grid grid-cols-1 md:grid-cols-7 bg-surface-container-lowest rounded-xl notebook-shadow border border-grid-line overflow-hidden">
-        {getWeekDates(selectedDate).map((date) => {
+    <div className="h-full flex flex-col min-h-0 p-2 md:p-4 gap-2">
+      <div className="grid grid-cols-7 bg-surface-container-lowest rounded-xl notebook-shadow border border-grid-line overflow-hidden shrink-0">
+        {weekDates.map((date) => {
           const dateString = toLocalDateString(date);
           const dayNotes = notesByDate.get(dateString) || [];
           const dayHolidays = holidaysByDate.get(dateString) || [];
@@ -36,39 +42,35 @@ export default function WeekCalendarScreen({
           const currentDay = isSameLocalDate(date, today);
 
           return (
-            <section key={dateString} className={`min-h-44 md:min-h-[520px] border-b md:border-b-0 md:border-r border-grid-line last:border-0 ${selected ? 'bg-primary/5' : ''}`}>
-              <button
-                type="button"
-                onClick={() => onSelectDate(date)}
-                className="sticky top-0 z-10 w-full px-3 py-3 bg-surface-container-low/95 backdrop-blur-sm border-b border-grid-line text-center cursor-pointer"
-                aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일${dayHolidays.length > 0 ? `, ${getHolidayNames(dayHolidays)}` : ''} 선택`}
-              >
-                <span className="block text-[10px] font-bold text-on-surface-variant">
-                  {['일', '월', '화', '수', '목', '금', '토'][date.getDay()]}
-                </span>
-                <span className={`mt-1 mx-auto w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold ${selected ? 'bg-primary text-white' : currentDay ? 'ring-2 ring-primary text-primary' : 'text-on-surface'}`}>
-                  {date.getDate()}
-                </span>
-                <HolidayBadges holidays={dayHolidays} compact />
-              </button>
-
-              <div className="p-2 space-y-2">
-                {dayNotes.length === 0 ? (
-                  <p className="py-6 text-center text-[10px] text-outline">메모 없음</p>
-                ) : dayNotes.map((note) => (
-                  <div key={note.id}>
-                    <CalendarNoteCard
-                      note={note}
-                      groups={groups}
-                      onSelectNote={onSelectNote}
-                      compact
-                    />
-                  </div>
-                ))}
+            <button
+              key={dateString}
+              type="button"
+              onClick={() => onSelectDate(date)}
+              className={`px-2 py-2 border-r border-grid-line last:border-r-0 text-center cursor-pointer transition-colors ${selected ? 'bg-primary/5' : 'hover:bg-surface-container-low'}`}
+              aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일${dayHolidays.length > 0 ? `, ${getHolidayNames(dayHolidays)}` : ''} 선택`}
+            >
+              <span className="block text-[10px] font-bold text-on-surface-variant">
+                {['일', '월', '화', '수', '목', '금', '토'][date.getDay()]}
+              </span>
+              <span className={`mt-1 mx-auto w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold ${selected ? 'bg-primary text-white' : currentDay ? 'ring-2 ring-primary text-primary' : 'text-on-surface'}`}>
+                {date.getDate()}
+              </span>
+              <HolidayBadges holidays={dayHolidays} compact />
+              <div className="mt-1 flex justify-center">
+                <CalendarNoteDots notes={dayNotes} onSelectNote={onSelectNote} />
               </div>
-            </section>
+            </button>
           );
         })}
+      </div>
+
+      <div className="flex-1 min-h-0 bg-surface-container-lowest rounded-xl notebook-shadow border border-grid-line overflow-hidden">
+        <TimeGrid
+          days={weekDates}
+          schedulesByDate={schedulesByDate}
+          onSelectSchedule={onSelectSchedule}
+          onCreateSchedule={onCreateSchedule}
+        />
       </div>
     </div>
   );

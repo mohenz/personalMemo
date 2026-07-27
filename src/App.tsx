@@ -20,7 +20,8 @@ import {
   Lock,
   LogIn
 } from 'lucide-react';
-import { Note, Group, ScreenType } from './types';
+import { Note, Group, Schedule, ScreenType } from './types';
+import { ScheduleDraft } from './components/calendar/ScheduleFormModal';
 import { PREMIUM_IMAGES } from './data';
 import SplashView from './components/SplashView';
 import Sidebar from './components/Sidebar';
@@ -113,6 +114,7 @@ export default function App() {
   // --- Core State: Firebase is the source of truth after login ---
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
 
   // --- Navigation & Filter Controls ---
   const [activeGroupId, setActiveGroupId] = useState<string>('all');
@@ -142,8 +144,10 @@ export default function App() {
         const nextGroups = Array.isArray(cloudState?.groups)
           ? cloudState.groups.filter((group) => !LEGACY_SAMPLE_GROUP_IDS.has(group.id))
           : [];
+        const nextSchedules = Array.isArray(cloudState?.schedules) ? cloudState.schedules : [];
         setNotes(nextNotes);
         setGroups(nextGroups);
+        setSchedules(nextSchedules);
         setProfileImage(typeof cloudState?.profileImage === 'string' ? cloudState.profileImage : PREMIUM_IMAGES.userProfile);
         setDarkMode(typeof cloudState?.darkMode === 'boolean' ? cloudState.darkMode : false);
         setArchiveStatus('자료실 계정과 동기화되었습니다.');
@@ -161,7 +165,7 @@ export default function App() {
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
 
     saveTimerRef.current = window.setTimeout(() => {
-      saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, profileImage })
+      saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, schedules, profileImage })
         .then(() => setArchiveStatus('자료실 백엔드에 저장되었습니다.'))
         .catch((error) => setArchiveStatus(error instanceof Error ? error.message : '자료실 저장에 실패했습니다.'));
     }, 500);
@@ -169,7 +173,7 @@ export default function App() {
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [archiveUser, cloudReady, darkMode, groups, notes, profileImage]);
+  }, [archiveUser, cloudReady, darkMode, groups, notes, schedules, profileImage]);
 
   // --- Computed Note Filters for Middle Pane ---
   const filteredDashboardNotes = useMemo(() => {
@@ -264,6 +268,50 @@ export default function App() {
     if (remaining.length > 0) {
       setSelectedNoteId(remaining[0].id);
     }
+  };
+
+  // --- Schedule CRUD handlers (mirrors the note handlers above) ---
+  const formatTimestamp = () =>
+    new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+    + ' ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+  const handleAddSchedule = (draft: ScheduleDraft) => {
+    const timestamp = formatTimestamp();
+    const newSchedule: Schedule = {
+      id: 'schedule-' + Date.now(),
+      title: draft.title,
+      dateString: draft.dateString,
+      allDay: draft.allDay,
+      startTime: draft.allDay ? undefined : draft.startTime,
+      endTime: draft.allDay ? undefined : draft.endTime,
+      priority: draft.priority,
+      memo: draft.memo || undefined,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    setSchedules(prev => [...prev, newSchedule]);
+  };
+
+  const handleUpdateSchedule = (scheduleId: string, draft: ScheduleDraft) => {
+    setSchedules(prev => prev.map(schedule => (
+      schedule.id === scheduleId
+        ? {
+            ...schedule,
+            title: draft.title,
+            dateString: draft.dateString,
+            allDay: draft.allDay,
+            startTime: draft.allDay ? undefined : draft.startTime,
+            endTime: draft.allDay ? undefined : draft.endTime,
+            priority: draft.priority,
+            memo: draft.memo || undefined,
+            updatedAt: formatTimestamp(),
+          }
+        : schedule
+    )));
+  };
+
+  const handleDeleteSchedule = (scheduleId: string) => {
+    setSchedules(prev => prev.filter(schedule => schedule.id !== scheduleId));
   };
 
   const handleStartAddNote = (withDate?: string) => {
@@ -502,12 +550,16 @@ export default function App() {
       {screen === 'CALENDAR' && (
         <CalendarView
           notes={notes}
+          schedules={schedules}
           groups={groups}
           onSelectNote={(id) => {
             setSelectedNoteId(id);
             setScreen('DASHBOARD');
           }}
           onAddNoteWithDate={(date) => handleStartAddNote(date)}
+          onAddSchedule={handleAddSchedule}
+          onUpdateSchedule={handleUpdateSchedule}
+          onDeleteSchedule={handleDeleteSchedule}
         />
       )}
 
@@ -715,11 +767,15 @@ export default function App() {
             <MobileAppShell
               notes={notes}
               groups={groups}
+              schedules={schedules}
               selectedNote={selectedNote}
               onSelectNote={setSelectedNoteId}
               onAddNote={() => handleStartAddNote()}
               onAddNoteWithDate={(date) => handleStartAddNote(date)}
               onEditNote={handleStartEditNote}
+              onAddSchedule={handleAddSchedule}
+              onUpdateSchedule={handleUpdateSchedule}
+              onDeleteSchedule={handleDeleteSchedule}
               userId={archiveUser.uid}
               profileImage={profileImage}
               onOpenSettings={() => setShowSettingsModal(true)}
@@ -761,7 +817,7 @@ export default function App() {
             if (!archiveUser) throw new Error('로그인 후 프로필 이미지를 저장할 수 있습니다.');
             const imageUrl = await uploadMemoProfileImage(archiveUser.uid, file);
             setProfileImage(imageUrl);
-            await saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, profileImage: imageUrl });
+            await saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, schedules, profileImage: imageUrl });
             setArchiveStatus('프로필 이미지가 자료실 Storage에 저장되었습니다.');
           }}
           darkMode={darkMode}

@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Group, Note } from '../types';
+import { Group, Note, Schedule } from '../types';
 import MobileBottomNav, { MobileTab } from './MobileBottomNav';
 import MobileNoteListScreen from './screens/MobileNoteListScreen';
 import MobileNoteDetailScreen from './screens/MobileNoteDetailScreen';
 import MobileFileListScreen, { ArchiveFile } from './screens/MobileFileListScreen';
 import MobileFilePreviewScreen from './screens/MobileFilePreviewScreen';
 import CalendarView from '../components/CalendarView';
+import { ScheduleDraft } from '../components/calendar/ScheduleFormModal';
 import { useArchiveFiles } from '../archiveStore/features/archive/useArchiveFiles.js';
 import { useArchiveMutations } from '../archiveStore/features/archive/useArchiveMutations.js';
 
@@ -20,11 +21,15 @@ function isUploadInProgressStatus(status: string) {
 interface MobileAppShellProps {
   notes: Note[];
   groups: Group[];
+  schedules: Schedule[];
   selectedNote: Note | null;
   onSelectNote: (id: string) => void;
   onAddNote: () => void;
   onAddNoteWithDate: (dateString: string) => void;
   onEditNote: (note: Note) => void;
+  onAddSchedule: (draft: ScheduleDraft) => void;
+  onUpdateSchedule: (scheduleId: string, draft: ScheduleDraft) => void;
+  onDeleteSchedule: (scheduleId: string) => void;
   userId: string;
   profileImage: string;
   onOpenSettings: () => void;
@@ -33,11 +38,15 @@ interface MobileAppShellProps {
 export default function MobileAppShell({
   notes,
   groups,
+  schedules,
   selectedNote,
   onSelectNote,
   onAddNote,
   onAddNoteWithDate,
   onEditNote,
+  onAddSchedule,
+  onUpdateSchedule,
+  onDeleteSchedule,
   userId,
   profileImage,
   onOpenSettings,
@@ -147,9 +156,13 @@ export default function MobileAppShell({
           <div className="flex-1 min-h-0">
             <CalendarView
               notes={notes}
+              schedules={schedules}
               groups={groups}
               onSelectNote={handleSelectNoteFromCalendar}
               onAddNoteWithDate={onAddNoteWithDate}
+              onAddSchedule={onAddSchedule}
+              onUpdateSchedule={onUpdateSchedule}
+              onDeleteSchedule={onDeleteSchedule}
             />
           </div>
         </div>

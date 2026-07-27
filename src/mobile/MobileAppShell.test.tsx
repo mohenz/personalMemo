@@ -108,11 +108,15 @@ describe('MobileAppShell', () => {
       <MobileAppShell
         notes={[buildNote()]}
         groups={[]}
+        schedules={[]}
         selectedNote={null}
         onSelectNote={() => undefined}
         onAddNote={() => undefined}
         onAddNoteWithDate={() => undefined}
         onEditNote={() => undefined}
+        onAddSchedule={() => undefined}
+        onUpdateSchedule={() => undefined}
+        onDeleteSchedule={() => undefined}
         userId="test-user"
         profileImage="https://example.com/avatar.png"
         onOpenSettings={() => undefined}

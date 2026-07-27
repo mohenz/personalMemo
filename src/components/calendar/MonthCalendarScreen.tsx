@@ -1,20 +1,27 @@
-import { Note } from '../../types';
+import { Note, Schedule } from '../../types';
 import HolidayBadges from '../../features/holidays/HolidayBadges';
 import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
 import { getHolidayNames } from '../../features/holidays/koreanHolidayUtils';
 import { getMonthCells, isSameLocalDate } from './calendarUtils';
+import { PRIORITY_COLORS, PRIORITY_ORDER } from './scheduleUtils';
 
 interface MonthCalendarScreenProps {
   selectedDate: Date;
   notesByDate: Map<string, Note[]>;
+  schedulesByDate: Map<string, Schedule[]>;
   holidaysByDate: Map<string, KoreanHoliday[]>;
   onSelectDate: (date: Date) => void;
   onSelectNote: (noteId: string) => void;
 }
 
+function highestPriority(schedules: Schedule[]) {
+  return PRIORITY_ORDER.find((priority) => schedules.some((schedule) => schedule.priority === priority));
+}
+
 export default function MonthCalendarScreen({
   selectedDate,
   notesByDate,
+  schedulesByDate,
   holidaysByDate,
   onSelectDate,
   onSelectNote,
@@ -38,10 +45,12 @@ export default function MonthCalendarScreen({
         <div className="grid grid-cols-7 auto-rows-[minmax(56px,1fr)] md:auto-rows-[minmax(112px,1fr)]">
           {cells.map((cell) => {
             const dayNotes = notesByDate.get(cell.dateString) || [];
+            const daySchedules = schedulesByDate.get(cell.dateString) || [];
             const dayHolidays = holidaysByDate.get(cell.dateString) || [];
             const selected = isSameLocalDate(cell.date, selectedDate);
             const currentDay = isSameLocalDate(cell.date, today);
             const weekday = cell.date.getDay();
+            const topSchedulePriority = highestPriority(daySchedules);
 
             return (
               <div
@@ -57,7 +66,12 @@ export default function MonthCalendarScreen({
                   <span className={`w-6 h-6 md:w-8 md:h-8 flex items-center justify-center rounded-full text-[10px] md:text-xs font-bold ${selected ? 'bg-primary text-white shadow-soft' : currentDay ? 'ring-2 ring-primary text-primary' : weekday === 0 ? 'text-error' : weekday === 6 ? 'text-primary' : 'text-on-surface'}`}>
                     {cell.date.getDate()}
                   </span>
-                  {dayNotes.length > 0 && <span className="w-1.5 h-1.5 bg-primary rounded-full shrink-0 mt-1" />}
+                  <span className="flex items-center gap-1 shrink-0 mt-1">
+                    {topSchedulePriority && (
+                      <span className={`w-1.5 h-1.5 rounded-full ${PRIORITY_COLORS[topSchedulePriority].dot}`} />
+                    )}
+                    {dayNotes.length > 0 && <span className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                  </span>
                 </button>
 
                 <HolidayBadges holidays={dayHolidays} compact />

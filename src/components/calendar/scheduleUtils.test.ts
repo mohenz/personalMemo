@@ -1,0 +1,81 @@
+import { describe, expect, it } from 'vitest';
+import { Schedule } from '../../types';
+import {
+  groupSchedulesByDate,
+  minutesToTime,
+  scheduleHeightPx,
+  scheduleTopPx,
+  splitAllDaySchedules,
+  timeToMinutes,
+} from './scheduleUtils';
+
+const makeSchedule = (overrides: Partial<Schedule> = {}): Schedule => ({
+  id: 'schedule-1',
+  title: '팀 회의',
+  dateString: '2026-07-23',
+  allDay: false,
+  startTime: '09:00',
+  endTime: '10:00',
+  priority: 'normal',
+  createdAt: '',
+  updatedAt: '',
+  ...overrides,
+});
+
+describe('time math', () => {
+  it('converts HH:mm to minutes and back', () => {
+    expect(timeToMinutes('09:30')).toBe(570);
+    expect(timeToMinutes('00:00')).toBe(0);
+    expect(minutesToTime(570)).toBe('09:30');
+    expect(minutesToTime(0)).toBe('00:00');
+  });
+
+  it('clamps minutesToTime to a single day', () => {
+    expect(minutesToTime(-30)).toBe('00:00');
+    expect(minutesToTime(24 * 60 + 30)).toBe('24:00');
+  });
+
+  it('computes grid top offset proportional to hour height', () => {
+    expect(scheduleTopPx('01:00')).toBe(56);
+    expect(scheduleTopPx('00:30')).toBe(28);
+  });
+
+  it('computes grid height for a duration, with a 15-minute floor', () => {
+    expect(scheduleHeightPx('09:00', '10:00')).toBe(56);
+    expect(scheduleHeightPx('09:00', '09:05')).toBeCloseTo((15 / 60) * 56);
+  });
+});
+
+describe('groupSchedulesByDate', () => {
+  it('groups by date, filters by search query, and excludes non-matches', () => {
+    const grouped = groupSchedulesByDate([
+      makeSchedule(),
+      makeSchedule({ id: 'schedule-2', title: '병원 예약', dateString: '2026-07-24' }),
+    ], '회의');
+
+    expect(grouped.get('2026-07-23')?.map((s) => s.id)).toEqual(['schedule-1']);
+    expect(grouped.has('2026-07-24')).toBe(false);
+  });
+
+  it('sorts all-day schedules before timed schedules, timed by start time', () => {
+    const grouped = groupSchedulesByDate([
+      makeSchedule({ id: 'late', startTime: '18:00', endTime: '19:00' }),
+      makeSchedule({ id: 'all-day', allDay: true, startTime: undefined, endTime: undefined }),
+      makeSchedule({ id: 'early', startTime: '08:00', endTime: '09:00' }),
+    ], '');
+
+    expect(grouped.get('2026-07-23')?.map((s) => s.id)).toEqual(['all-day', 'early', 'late']);
+  });
+});
+
+describe('splitAllDaySchedules', () => {
+  it('separates all-day (고정) schedules from timed ones', () => {
+    const allDay = makeSchedule({ id: 'a', allDay: true, startTime: undefined, endTime: undefined });
+    const timed = makeSchedule({ id: 'b' });
+
+    expect(splitAllDaySchedules([allDay, timed])).toEqual({
+      allDay: [allDay],
+      timed: [timed],
+    });
+  });
+});

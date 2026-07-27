@@ -25,3 +25,18 @@ export interface Note {
 }
 
 export type ScreenType = 'SPLASH' | 'DASHBOARD' | 'EDITOR' | 'SEARCH' | 'CALENDAR' | 'ARCHIVE';
+
+export type SchedulePriority = 'high' | 'normal' | 'low';
+
+export interface Schedule {
+  id: string;
+  title: string;
+  dateString: string; // e.g. "2026-07-15" to align with calendar
+  allDay: boolean; // true = 시간 없는 종일(고정) 일정
+  startTime?: string; // "HH:mm", allDay=false일 때 필수
+  endTime?: string; // "HH:mm", allDay=false일 때 필수
+  priority: SchedulePriority;
+  memo?: string;
+  createdAt: string;
+  updatedAt: string;
+}

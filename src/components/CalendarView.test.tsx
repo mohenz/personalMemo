@@ -7,9 +7,13 @@ const renderCalendar = (date: Date) => {
   return renderToStaticMarkup(
     <CalendarView
       notes={[]}
+      schedules={[]}
       groups={[]}
       onSelectNote={() => undefined}
       onAddNoteWithDate={() => undefined}
+      onAddSchedule={() => undefined}
+      onUpdateSchedule={() => undefined}
+      onDeleteSchedule={() => undefined}
     />
   );
 };

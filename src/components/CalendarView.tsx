@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
-import { Group, Note } from '../types';
+import { CalendarPlus, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { Group, Note, Schedule } from '../types';
 import { toLocalDateString } from '../utils/date';
 import { koreanHolidays } from '../features/holidays/koreanHolidays.generated';
 import { groupKoreanHolidays } from '../features/holidays/koreanHolidayUtils';
 import DayCalendarScreen from './calendar/DayCalendarScreen';
 import MonthCalendarScreen from './calendar/MonthCalendarScreen';
+import ScheduleFormModal, { ScheduleDraft } from './calendar/ScheduleFormModal';
 import SelectedDayPanel from './calendar/SelectedDayPanel';
 import WeekCalendarScreen from './calendar/WeekCalendarScreen';
 import {
@@ -14,14 +15,24 @@ import {
   groupCalendarNotes,
   shiftCalendarDate,
 } from './calendar/calendarUtils';
+import { groupSchedulesByDate } from './calendar/scheduleUtils';
 
 export { clampDayToMonth } from './calendar/calendarUtils';
 
+type ScheduleModalState =
+  | { mode: 'closed' }
+  | { mode: 'create'; dateString: string; startTime: string }
+  | { mode: 'edit'; schedule: Schedule };
+
 interface CalendarViewProps {
   notes: Note[];
+  schedules: Schedule[];
   groups: Group[];
   onSelectNote: (noteId: string) => void;
   onAddNoteWithDate: (dateString: string) => void;
+  onAddSchedule: (draft: ScheduleDraft) => void;
+  onUpdateSchedule: (scheduleId: string, draft: ScheduleDraft) => void;
+  onDeleteSchedule: (scheduleId: string) => void;
 }
 
 const VIEW_OPTIONS: Array<{ value: CalendarViewMode; label: string }> = [
@@ -38,21 +49,31 @@ const MOVE_LABEL: Record<CalendarViewMode, string> = {
 
 export default function CalendarView({
   notes,
+  schedules,
   groups,
   onSelectNote,
   onAddNoteWithDate,
+  onAddSchedule,
+  onUpdateSchedule,
+  onDeleteSchedule,
 }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [searchQuery, setSearchQuery] = useState('');
+  const [scheduleModal, setScheduleModal] = useState<ScheduleModalState>({ mode: 'closed' });
 
   const notesByDate = useMemo(
     () => groupCalendarNotes(notes, searchQuery),
     [notes, searchQuery],
   );
+  const schedulesByDate = useMemo(
+    () => groupSchedulesByDate(schedules, searchQuery),
+    [schedules, searchQuery],
+  );
   const holidaysByDate = useMemo(() => groupKoreanHolidays(koreanHolidays), []);
   const selectedDateString = toLocalDateString(selectedDate);
   const selectedNotes = notesByDate.get(selectedDateString) || [];
+  const selectedSchedules = schedulesByDate.get(selectedDateString) || [];
   const selectedHolidays = holidaysByDate.get(selectedDateString) || [];
 
   const movePeriod = (offset: number) => {
@@ -60,6 +81,22 @@ export default function CalendarView({
   };
 
   const moveToToday = () => setSelectedDate(new Date());
+
+  const closeScheduleModal = () => setScheduleModal({ mode: 'closed' });
+
+  const handleSaveSchedule = (draft: ScheduleDraft) => {
+    if (scheduleModal.mode === 'edit') {
+      onUpdateSchedule(scheduleModal.schedule.id, draft);
+    } else {
+      onAddSchedule(draft);
+    }
+    closeScheduleModal();
+  };
+
+  const handleDeleteSchedule = (scheduleId: string) => {
+    onDeleteSchedule(scheduleId);
+    closeScheduleModal();
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 bg-background select-none relative">
@@ -99,7 +136,7 @@ export default function CalendarView({
 
         </div>
 
-        <div className="flex items-center gap-2 w-full md:justify-end">
+        <div className="flex flex-wrap items-center gap-2 w-full md:justify-end">
           <div className="flex items-center bg-surface-container rounded-xl p-1 shrink-0" aria-label="캘린더 보기 방식">
             {VIEW_OPTIONS.map((option) => (
               <button
@@ -128,8 +165,17 @@ export default function CalendarView({
 
           <button
             type="button"
-            onClick={() => onAddNoteWithDate(toLocalDateString(selectedDate))}
+            onClick={() => setScheduleModal({ mode: 'create', dateString: selectedDateString, startTime: '09:00' })}
             className="bg-primary text-white text-xs font-bold px-4 h-10 rounded-xl flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition-all shadow-soft cursor-pointer shrink-0"
+          >
+            <CalendarPlus className="w-4 h-4" />
+            <span>새 일정</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onAddNoteWithDate(toLocalDateString(selectedDate))}
+            className="bg-surface-container text-on-surface-variant text-xs font-bold px-4 h-10 rounded-xl flex items-center gap-1.5 hover:bg-surface-container-high transition-all cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>새 메모</span>
@@ -142,10 +188,12 @@ export default function CalendarView({
           <DayCalendarScreen
             selectedDate={selectedDate}
             notes={selectedNotes}
+            schedules={selectedSchedules}
             holidays={selectedHolidays}
-            groups={groups}
             onSelectNote={onSelectNote}
             onAddNoteWithDate={onAddNoteWithDate}
+            onSelectSchedule={(schedule) => setScheduleModal({ mode: 'edit', schedule })}
+            onCreateSchedule={(dateString, startTime) => setScheduleModal({ mode: 'create', dateString, startTime })}
           />
         ) : (
           <div className="h-full flex flex-col xl:flex-row min-h-0 overflow-hidden">
@@ -154,6 +202,7 @@ export default function CalendarView({
                 <MonthCalendarScreen
                   selectedDate={selectedDate}
                   notesByDate={notesByDate}
+                  schedulesByDate={schedulesByDate}
                   holidaysByDate={holidaysByDate}
                   onSelectDate={setSelectedDate}
                   onSelectNote={onSelectNote}
@@ -162,10 +211,12 @@ export default function CalendarView({
                 <WeekCalendarScreen
                   selectedDate={selectedDate}
                   notesByDate={notesByDate}
+                  schedulesByDate={schedulesByDate}
                   holidaysByDate={holidaysByDate}
-                  groups={groups}
                   onSelectDate={setSelectedDate}
                   onSelectNote={onSelectNote}
+                  onSelectSchedule={(schedule) => setScheduleModal({ mode: 'edit', schedule })}
+                  onCreateSchedule={(dateString, startTime) => setScheduleModal({ mode: 'create', dateString, startTime })}
                 />
               )}
             </div>
@@ -181,6 +232,17 @@ export default function CalendarView({
           </div>
         )}
       </div>
+
+      {scheduleModal.mode !== 'closed' && (
+        <ScheduleFormModal
+          schedule={scheduleModal.mode === 'edit' ? scheduleModal.schedule : null}
+          initialDateString={scheduleModal.mode === 'create' ? scheduleModal.dateString : selectedDateString}
+          initialStartTime={scheduleModal.mode === 'create' ? scheduleModal.startTime : undefined}
+          onSave={handleSaveSchedule}
+          onDelete={scheduleModal.mode === 'edit' ? handleDeleteSchedule : undefined}
+          onClose={closeScheduleModal}
+        />
+      )}
 
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
     </div>
