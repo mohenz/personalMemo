@@ -4,6 +4,7 @@ export const HOUR_HEIGHT_PX = 56;
 export const GRID_START_HOUR = 0;
 export const GRID_END_HOUR = 24;
 export const DEFAULT_SCROLL_HOUR = 7;
+export const TIME_STEP_MINUTES = 30;
 
 export const PRIORITY_ORDER: SchedulePriority[] = ['high', 'normal', 'low'];
 
@@ -45,6 +46,12 @@ export function minutesToTime(totalMinutes: number): string {
   const hours = Math.floor(clamped / 60);
   const minutes = clamped % 60;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+export function snapToStep(time: string): string {
+  const minutes = timeToMinutes(time);
+  const snapped = Math.round(minutes / TIME_STEP_MINUTES) * TIME_STEP_MINUTES;
+  return minutesToTime(snapped);
 }
 
 export function scheduleTopPx(startTime: string): number {

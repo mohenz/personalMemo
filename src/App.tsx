@@ -229,6 +229,12 @@ export default function App() {
     setActiveGroupId(newGroup.id);
   };
 
+  const handleRenameFolder = (groupId: string, newName: string) => {
+    setGroups(prev => prev.map(group => (
+      group.id === groupId ? { ...group, name: newName } : group
+    )));
+  };
+
   const handleToggleFavorite = (noteId: string) => {
     setNotes(prev => prev.map(note => 
       note.id === noteId ? { ...note, isFavorite: !note.isFavorite } : note
@@ -822,6 +828,8 @@ export default function App() {
           }}
           darkMode={darkMode}
           onToggleDarkMode={(enabled) => setDarkMode(enabled)}
+          groups={groups}
+          onRenameGroup={handleRenameFolder}
           archiveUserEmail={archiveUser?.email || ''}
           archiveStatus={archiveStatus}
           firebaseConfigured={isFirebaseConfigured}

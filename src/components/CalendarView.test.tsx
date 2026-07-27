@@ -22,17 +22,33 @@ describe('CalendarView current date', () => {
   afterEach(() => vi.useRealTimers());
 
   it.each([
-    [new Date(2026, 0, 1, 12), '2026년 1월', '1월 1일 메모'],
-    [new Date(2026, 1, 28, 12), '2026년 2월', '2월 28일 메모'],
-    [new Date(2028, 1, 29, 12), '2028년 2월', '2월 29일 메모'],
-    [new Date(2026, 6, 14, 12), '2026년 7월', '7월 14일 메모'],
-    [new Date(2026, 11, 31, 12), '2026년 12월', '12월 31일 메모'],
+    [new Date(2026, 0, 1, 12), '2026년 1월', '1월 1일'],
+    [new Date(2026, 1, 28, 12), '2026년 2월', '2월 28일'],
+    [new Date(2028, 1, 29, 12), '2028년 2월', '2월 29일'],
+    [new Date(2026, 6, 14, 12), '2026년 7월', '7월 14일'],
+    [new Date(2026, 11, 31, 12), '2026년 12월', '12월 31일'],
   ])('uses the system date %#', (date, monthLabel, dayLabel) => {
     vi.useFakeTimers();
     const markup = renderCalendar(date);
 
     expect(markup).toContain(monthLabel);
     expect(markup).toContain(dayLabel);
+  });
+});
+
+describe('CalendarView selected-day panel', () => {
+  it('shows a schedules section above the notes section', () => {
+    vi.useFakeTimers();
+    const markup = renderCalendar(new Date(2026, 6, 23, 12));
+
+    const scheduleHeadingIndex = markup.indexOf('>일정<');
+    const noteHeadingIndex = markup.indexOf('>메모<');
+
+    expect(scheduleHeadingIndex).toBeGreaterThan(-1);
+    expect(noteHeadingIndex).toBeGreaterThan(-1);
+    expect(scheduleHeadingIndex).toBeLessThan(noteHeadingIndex);
+
+    vi.useRealTimers();
   });
 });
 

@@ -5,6 +5,7 @@ import {
   minutesToTime,
   scheduleHeightPx,
   scheduleTopPx,
+  snapToStep,
   splitAllDaySchedules,
   timeToMinutes,
 } from './scheduleUtils';
@@ -43,6 +44,14 @@ describe('time math', () => {
   it('computes grid height for a duration, with a 15-minute floor', () => {
     expect(scheduleHeightPx('09:00', '10:00')).toBe(56);
     expect(scheduleHeightPx('09:00', '09:05')).toBeCloseTo((15 / 60) * 56);
+  });
+
+  it('snaps a time to the nearest 30-minute step', () => {
+    expect(snapToStep('09:00')).toBe('09:00');
+    expect(snapToStep('09:14')).toBe('09:00');
+    expect(snapToStep('09:15')).toBe('09:30');
+    expect(snapToStep('09:44')).toBe('09:30');
+    expect(snapToStep('09:45')).toBe('10:00');
   });
 });
 

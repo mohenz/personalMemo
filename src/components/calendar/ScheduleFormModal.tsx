@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { Schedule, SchedulePriority } from '../../types';
-import { PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_ORDER, minutesToTime, timeToMinutes } from './scheduleUtils';
+import { PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_ORDER, TIME_STEP_MINUTES, minutesToTime, snapToStep, timeToMinutes } from './scheduleUtils';
 
 export interface ScheduleDraft {
   title: string;
@@ -80,9 +80,19 @@ export default function ScheduleFormModal({
         aria-labelledby="schedule-form-title"
         className="bg-surface-container-lowest text-on-surface p-6 rounded-2xl w-96 max-w-full shadow-2xl border border-outline-variant flex flex-col gap-4 select-text"
       >
-        <h3 id="schedule-form-title" className="font-bold text-lg text-on-surface">
-          {schedule ? '일정 수정' : '새 일정'}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 id="schedule-form-title" className="font-bold text-lg text-on-surface">
+            {schedule ? '일정확인' : '새 일정'}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="닫기"
+            className="p-1.5 hover:bg-surface-container-high rounded-full text-on-surface-variant transition-colors cursor-pointer"
+          >
+            <X className="w-4.5 h-4.5" />
+          </button>
+        </div>
 
         <input
           type="text"
@@ -119,19 +129,27 @@ export default function ScheduleFormModal({
           <div className="flex items-center gap-2">
             <input
               type="time"
+              step={TIME_STEP_MINUTES * 60}
               required={!draft.allDay}
               aria-label="시작 시간"
               value={draft.startTime}
-              onChange={(event) => setDraft((prev) => ({ ...prev, startTime: event.target.value }))}
+              onChange={(event) => {
+                if (!event.target.value) return;
+                setDraft((prev) => ({ ...prev, startTime: snapToStep(event.target.value) }));
+              }}
               className="flex-1 h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm text-on-surface bg-surface-container-low"
             />
             <span className="text-outline text-sm">–</span>
             <input
               type="time"
+              step={TIME_STEP_MINUTES * 60}
               required={!draft.allDay}
               aria-label="종료 시간"
               value={draft.endTime}
-              onChange={(event) => setDraft((prev) => ({ ...prev, endTime: event.target.value }))}
+              onChange={(event) => {
+                if (!event.target.value) return;
+                setDraft((prev) => ({ ...prev, endTime: snapToStep(event.target.value) }));
+              }}
               className="flex-1 h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm text-on-surface bg-surface-container-low"
             />
           </div>

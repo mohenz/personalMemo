@@ -7,6 +7,8 @@ import {
   GRID_START_HOUR,
   HOUR_HEIGHT_PX,
   PRIORITY_COLORS,
+  TIME_STEP_MINUTES,
+  minutesToTime,
   scheduleHeightPx,
   scheduleTopPx,
   splitAllDaySchedules,
@@ -14,6 +16,11 @@ import {
 import { isSameLocalDate } from './calendarUtils';
 
 const HOURS = Array.from({ length: GRID_END_HOUR - GRID_START_HOUR }, (_, i) => GRID_START_HOUR + i);
+const SLOT_HEIGHT_PX = (HOUR_HEIGHT_PX * TIME_STEP_MINUTES) / 60;
+const SLOTS = Array.from(
+  { length: ((GRID_END_HOUR - GRID_START_HOUR) * 60) / TIME_STEP_MINUTES },
+  (_, i) => GRID_START_HOUR * 60 + i * TIME_STEP_MINUTES,
+);
 
 interface TimeGridProps {
   days: Date[]; // 길이 1 = 일간, 7 = 주간
@@ -85,16 +92,20 @@ export default function TimeGrid({ days, schedulesByDate, onSelectSchedule, onCr
 
               return (
                 <div key={dateString} className="relative border-r border-grid-line last:border-r-0">
-                  {HOURS.map((hour) => (
-                    <button
-                      key={hour}
-                      type="button"
-                      onClick={() => onCreateSchedule(dateString, `${String(hour).padStart(2, '0')}:00`)}
-                      aria-label={`${dateString} ${hour}시에 새 일정`}
-                      className={`absolute left-0 right-0 border-t border-grid-line hover:bg-primary/5 cursor-pointer transition-colors ${currentDay ? 'bg-primary/[0.02]' : ''}`}
-                      style={{ top: hour * HOUR_HEIGHT_PX, height: HOUR_HEIGHT_PX }}
-                    />
-                  ))}
+                  {SLOTS.map((slotMinutes) => {
+                    const isHourStart = slotMinutes % 60 === 0;
+                    const slotTime = minutesToTime(slotMinutes);
+                    return (
+                      <button
+                        key={slotMinutes}
+                        type="button"
+                        onClick={() => onCreateSchedule(dateString, slotTime)}
+                        aria-label={`${dateString} ${slotTime}에 새 일정`}
+                        className={`absolute left-0 right-0 hover:bg-primary/5 cursor-pointer transition-colors ${isHourStart ? 'border-t border-grid-line' : 'border-t border-dashed border-grid-line/60'} ${currentDay ? 'bg-primary/[0.02]' : ''}`}
+                        style={{ top: (slotMinutes / 60) * HOUR_HEIGHT_PX, height: SLOT_HEIGHT_PX }}
+                      />
+                    );
+                  })}
 
                   {timed.map((schedule) => (
                     <button

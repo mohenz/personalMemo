@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Sun, Moon, Check, User, Sparkles, Upload, Download, Smartphone, Cloud, LogOut } from 'lucide-react';
+import { X, Sun, Moon, Check, User, Sparkles, Upload, Download, Smartphone, Cloud, LogOut, Folder } from 'lucide-react';
+import { Group } from '../types';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -7,6 +8,8 @@ interface SettingsModalProps {
   onUpdateProfileImage: (file: File) => Promise<void>;
   darkMode: boolean;
   onToggleDarkMode: (enabled: boolean) => void;
+  groups: Group[];
+  onRenameGroup: (groupId: string, newName: string) => void;
   archiveUserEmail: string;
   archiveStatus: string;
   firebaseConfigured: boolean;
@@ -17,12 +20,54 @@ interface SettingsModalProps {
   onInstall?: () => void;
 }
 
+interface FolderRenameRowProps {
+  group: Group;
+  onRename: (groupId: string, newName: string) => void;
+}
+
+function FolderRenameRow({ group, onRename }: FolderRenameRowProps) {
+  const [name, setName] = useState(group.name);
+
+  const commit = () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setName(group.name);
+      return;
+    }
+    if (trimmed !== group.name) {
+      onRename(group.id, trimmed);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2.5 bg-surface dark:bg-surface-container-lowest rounded-xl border border-outline-variant/30 px-3 py-2">
+      <Folder className="w-4 h-4 text-primary shrink-0" />
+      <input
+        type="text"
+        aria-label={`${group.name} 폴더 이름`}
+        value={name}
+        maxLength={40}
+        onChange={(event) => setName(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.currentTarget.blur();
+          }
+        }}
+        className="flex-1 h-9 px-2 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded-lg text-sm font-semibold text-on-surface"
+      />
+    </div>
+  );
+}
+
 export default function SettingsModal({
   onClose,
   profileImage,
   onUpdateProfileImage,
   darkMode,
   onToggleDarkMode,
+  groups,
+  onRenameGroup,
   archiveUserEmail,
   archiveStatus,
   firebaseConfigured,
@@ -32,7 +77,7 @@ export default function SettingsModal({
   isInstallable,
   onInstall
 }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'archive' | 'theme'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'archive' | 'theme' | 'folders'>('profile');
   const [dragOver, setDragOver] = useState(false);
   const [archiveEmail, setArchiveEmail] = useState('');
   const [archivePassword, setArchivePassword] = useState('');
@@ -105,6 +150,19 @@ export default function SettingsModal({
           >
             <Sun className="w-4 h-4" />
             <span className="hidden md:inline">화면 테마 설정</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('folders')}
+            title="폴더 이름 관리"
+            aria-label="폴더 이름 관리"
+            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
+              activeTab === 'folders'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <Folder className="w-4 h-4" />
+            <span className="hidden md:inline">폴더 이름 관리</span>
           </button>
           <button
             onClick={() => setActiveTab('archive')}
@@ -288,6 +346,30 @@ export default function SettingsModal({
                 )}
               </div>
 
+            </div>
+          )}
+
+          {activeTab === 'folders' && (
+            <div className="space-y-4">
+              <div className="p-4 bg-surface dark:bg-surface-container-lowest rounded-2xl border border-outline-variant/30 text-xs text-on-surface-variant leading-relaxed">
+                <span className="font-bold text-primary block mb-1">폴더 이름 관리</span>
+                메모를 분류하는 그룹 폴더의 이름을 수정할 수 있습니다. 입력 후 다른 곳을 클릭하거나 Enter를 누르면 저장됩니다.
+              </div>
+
+              {groups.length === 0 ? (
+                <div className="text-center py-10 opacity-50">
+                  <Folder className="w-8 h-8 text-outline mx-auto mb-2 stroke-[1.25]" />
+                  <p className="text-xs font-semibold text-on-surface-variant">등록된 폴더가 없습니다.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {groups.map((group) => (
+                    <div key={group.id}>
+                      <FolderRenameRow group={group} onRename={onRenameGroup} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

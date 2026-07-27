@@ -224,10 +224,12 @@ export default function CalendarView({
             <SelectedDayPanel
               selectedDate={selectedDate}
               notes={selectedNotes}
+              schedules={selectedSchedules}
               holidays={selectedHolidays}
               groups={groups}
               onSelectNote={onSelectNote}
               onAddNoteWithDate={onAddNoteWithDate}
+              onSelectSchedule={(schedule) => setScheduleModal({ mode: 'edit', schedule })}
             />
           </div>
         )}
