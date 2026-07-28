@@ -86,6 +86,18 @@ export default function Sidebar({
         {/* Primary Screen Navigation */}
         <nav className="flex flex-row lg:flex-col gap-2 lg:gap-1 overflow-x-auto lg:overflow-x-visible no-scrollbar pb-1 lg:pb-0">
           <button
+            onClick={() => setScreen('CALENDAR')}
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              currentScreen === 'CALENDAR'
+                ? 'bg-primary text-white shadow-soft font-semibold'
+                : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+            }`}
+          >
+            <Calendar className="w-5 h-5" />
+            <span>캘린더</span>
+          </button>
+
+          <button
             onClick={() => {
               setScreen('DASHBOARD');
               setActiveGroupId('all');
@@ -110,18 +122,6 @@ export default function Sidebar({
           </button>
 
           <button
-            onClick={() => setScreen('CALENDAR')}
-            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-              currentScreen === 'CALENDAR'
-                ? 'bg-primary text-white shadow-soft font-semibold'
-                : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
-            }`}
-          >
-            <Calendar className="w-5 h-5" />
-            <span>캘린더</span>
-          </button>
-
-          <button
             onClick={() => {
               setScreen('DASHBOARD');
               setActiveGroupId('starred');
@@ -136,32 +136,11 @@ export default function Sidebar({
             <span>중요 메모</span>
           </button>
 
-          <button
-            onClick={() => setScreen('SEARCH')}
-            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
-              currentScreen === 'SEARCH'
-                ? 'bg-primary text-white shadow-soft font-semibold'
-                : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
-            }`}
-          >
-            <Tag className="w-5 h-5" />
-            <span>태그 및 검색</span>
-          </button>
-
-          <button
-            onClick={onOpenArchive}
-            className="min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-            title="자료실 열기"
-          >
-            <Archive className="w-5 h-5" />
-            <span>자료실</span>
-          </button>
-
           {/* Group Folder Divider */}
           <div className="flex pt-1 lg:pt-5 pb-2 px-4 items-center justify-between min-w-max lg:min-w-0">
             <span className="text-[11px] font-bold text-outline uppercase tracking-wider">그룹 폴더</span>
-            <button 
-              onClick={() => setShowAddFolderModal(true)} 
+            <button
+              onClick={() => setShowAddFolderModal(true)}
               className="p-1 rounded-md hover:bg-surface-container-high text-primary transition-colors"
               title="새 폴더 추가"
             >
@@ -189,6 +168,27 @@ export default function Sidebar({
               </button>
             ))}
           </div>
+
+          <button
+            onClick={onOpenArchive}
+            className="min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+            title="자료실 열기"
+          >
+            <Archive className="w-5 h-5" />
+            <span>자료실</span>
+          </button>
+
+          <button
+            onClick={() => setScreen('SEARCH')}
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+              currentScreen === 'SEARCH'
+                ? 'bg-primary text-white shadow-soft font-semibold'
+                : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+            }`}
+          >
+            <Tag className="w-5 h-5" />
+            <span>태그 및 검색</span>
+          </button>
 
           <div className="hidden lg:block my-1 border-t border-outline-variant/30" />
 
