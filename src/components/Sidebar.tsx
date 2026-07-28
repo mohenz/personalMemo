@@ -169,6 +169,8 @@ export default function Sidebar({
             ))}
           </div>
 
+          <div className="hidden lg:block my-1 border-t border-outline-variant/30" />
+
           <button
             onClick={onOpenArchive}
             className="min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
