@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CalendarPlus, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { CalendarPlus, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Group, Note, Schedule } from '../types';
 import { toLocalDateString } from '../utils/date';
 import { koreanHolidays } from '../features/holidays/koreanHolidays.generated';
@@ -29,7 +29,6 @@ interface CalendarViewProps {
   schedules: Schedule[];
   groups: Group[];
   onSelectNote: (noteId: string) => void;
-  onAddNoteWithDate: (dateString: string) => void;
   onAddSchedule: (draft: ScheduleDraft) => void;
   onUpdateSchedule: (scheduleId: string, draft: ScheduleDraft) => void;
   onDeleteSchedule: (scheduleId: string) => void;
@@ -52,7 +51,6 @@ export default function CalendarView({
   schedules,
   groups,
   onSelectNote,
-  onAddNoteWithDate,
   onAddSchedule,
   onUpdateSchedule,
   onDeleteSchedule,
@@ -62,14 +60,11 @@ export default function CalendarView({
   const [searchQuery, setSearchQuery] = useState('');
   const [scheduleModal, setScheduleModal] = useState<ScheduleModalState>({ mode: 'closed' });
 
-  const notesByDate = useMemo(
-    () => groupCalendarNotes(notes, searchQuery),
-    [notes, searchQuery],
-  );
   const schedulesByDate = useMemo(
     () => groupSchedulesByDate(schedules, searchQuery),
     [schedules, searchQuery],
   );
+  const notesByDate = useMemo(() => groupCalendarNotes(notes, ''), [notes]);
   const holidaysByDate = useMemo(() => groupKoreanHolidays(koreanHolidays), []);
   const selectedDateString = toLocalDateString(selectedDate);
   const selectedNotes = notesByDate.get(selectedDateString) || [];
@@ -155,8 +150,8 @@ export default function CalendarView({
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
             <input
               type="search"
-              aria-label="캘린더 메모 검색"
-              placeholder="메모 검색..."
+              aria-label="캘린더 일정 검색"
+              placeholder="일정 검색..."
               className="bg-surface border border-transparent rounded-xl h-10 pl-9 pr-4 w-full md:w-56 focus:outline-none focus:ring-2 focus:ring-primary transition-all text-xs font-medium text-on-surface placeholder:text-outline select-text"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
@@ -172,14 +167,6 @@ export default function CalendarView({
             <span>새 일정</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => onAddNoteWithDate(toLocalDateString(selectedDate))}
-            className="bg-surface-container text-on-surface-variant text-xs font-bold px-4 h-10 rounded-xl flex items-center gap-1.5 hover:bg-surface-container-high transition-all cursor-pointer shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>새 메모</span>
-          </button>
         </div>
       </header>
 
@@ -187,11 +174,8 @@ export default function CalendarView({
         {viewMode === 'day' ? (
           <DayCalendarScreen
             selectedDate={selectedDate}
-            notes={selectedNotes}
             schedules={selectedSchedules}
             holidays={selectedHolidays}
-            onSelectNote={onSelectNote}
-            onAddNoteWithDate={onAddNoteWithDate}
             onSelectSchedule={(schedule) => setScheduleModal({ mode: 'edit', schedule })}
             onCreateSchedule={(dateString, startTime) => setScheduleModal({ mode: 'create', dateString, startTime })}
           />
@@ -201,20 +185,17 @@ export default function CalendarView({
               {viewMode === 'month' ? (
                 <MonthCalendarScreen
                   selectedDate={selectedDate}
-                  notesByDate={notesByDate}
                   schedulesByDate={schedulesByDate}
                   holidaysByDate={holidaysByDate}
                   onSelectDate={setSelectedDate}
-                  onSelectNote={onSelectNote}
+                  onSelectSchedule={(schedule) => setScheduleModal({ mode: 'edit', schedule })}
                 />
               ) : (
                 <WeekCalendarScreen
                   selectedDate={selectedDate}
-                  notesByDate={notesByDate}
                   schedulesByDate={schedulesByDate}
                   holidaysByDate={holidaysByDate}
                   onSelectDate={setSelectedDate}
-                  onSelectNote={onSelectNote}
                   onSelectSchedule={(schedule) => setScheduleModal({ mode: 'edit', schedule })}
                   onCreateSchedule={(dateString, startTime) => setScheduleModal({ mode: 'create', dateString, startTime })}
                 />
@@ -228,7 +209,6 @@ export default function CalendarView({
               holidays={selectedHolidays}
               groups={groups}
               onSelectNote={onSelectNote}
-              onAddNoteWithDate={onAddNoteWithDate}
               onSelectSchedule={(schedule) => setScheduleModal({ mode: 'edit', schedule })}
             />
           </div>

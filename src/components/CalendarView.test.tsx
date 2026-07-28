@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import CalendarView, { clampDayToMonth } from './CalendarView';
+import { Note, Schedule } from '../types';
 
-const renderCalendar = (date: Date) => {
+const renderCalendar = (date: Date, schedules: Schedule[] = [], notes: Note[] = []) => {
   vi.setSystemTime(date);
   return renderToStaticMarkup(
     <CalendarView
-      notes={[]}
-      schedules={[]}
+      notes={notes}
+      schedules={schedules}
       groups={[]}
       onSelectNote={() => undefined}
-      onAddNoteWithDate={() => undefined}
       onAddSchedule={() => undefined}
       onUpdateSchedule={() => undefined}
       onDeleteSchedule={() => undefined}
@@ -37,16 +37,53 @@ describe('CalendarView current date', () => {
 });
 
 describe('CalendarView selected-day panel', () => {
-  it('shows a schedules section above the notes section', () => {
+  it('shows the selected date schedules and notes without memo creation controls', () => {
     vi.useFakeTimers();
-    const markup = renderCalendar(new Date(2026, 6, 23, 12));
+    const markup = renderCalendar(new Date(2026, 6, 23, 12), [], [{
+      id: 'note-1',
+      title: '인터뷰 회의록',
+      content: '요구사항 정리',
+      groupId: 'personal',
+      createdAt: '2026년 7월 23일',
+      updatedAt: '2026년 7월 23일',
+      dateString: '2026-07-23',
+      isFavorite: false,
+      isDeleted: false,
+      images: [],
+      checklist: [],
+    }]);
 
-    const scheduleHeadingIndex = markup.indexOf('>일정<');
-    const noteHeadingIndex = markup.indexOf('>메모<');
+    expect(markup).toContain('>일정<');
+    expect(markup).toContain('>메모<');
+    expect(markup).toContain('인터뷰 회의록');
+    expect(markup).not.toContain('새 메모');
+    expect(markup).not.toContain('캘린더 메모 검색');
 
-    expect(scheduleHeadingIndex).toBeGreaterThan(-1);
-    expect(noteHeadingIndex).toBeGreaterThan(-1);
-    expect(scheduleHeadingIndex).toBeLessThan(noteHeadingIndex);
+    vi.useRealTimers();
+  });
+
+  it('places the schedule time before its title', () => {
+    vi.useFakeTimers();
+    const markup = renderCalendar(new Date(2026, 6, 23, 12), [{
+      id: 'schedule-1',
+      title: '이마트앱팀 미팅',
+      dateString: '2026-07-23',
+      allDay: false,
+      startTime: '13:00',
+      endTime: '15:00',
+      priority: 'high',
+      createdAt: '2026-07-23T00:00:00.000Z',
+      updatedAt: '2026-07-23T00:00:00.000Z',
+    }]);
+
+    const scheduleContent = markup.match(
+      /aria-label="13:00–15:00 이마트앱팀 미팅"[^>]*>(.*?)<\/button>/,
+    )?.[1];
+
+    expect(scheduleContent).toBeDefined();
+    expect(scheduleContent!.indexOf('13:00–15:00')).toBeLessThan(
+      scheduleContent!.indexOf('이마트앱팀 미팅'),
+    );
 
     vi.useRealTimers();
   });
@@ -67,11 +104,11 @@ describe('CalendarView month navigation', () => {
 });
 
 describe('CalendarView toolbar layout', () => {
-  it('places the view controls immediately before memo search', () => {
+  it('places the view controls before schedule search', () => {
     vi.useFakeTimers();
     const markup = renderCalendar(new Date(2026, 6, 23, 12));
 
-    expect(markup.indexOf('캘린더 보기 방식')).toBeLessThan(markup.indexOf('캘린더 메모 검색'));
+    expect(markup.indexOf('캘린더 보기 방식')).toBeLessThan(markup.indexOf('캘린더 일정 검색'));
 
     vi.useRealTimers();
   });

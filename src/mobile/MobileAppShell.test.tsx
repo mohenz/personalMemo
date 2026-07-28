@@ -112,7 +112,6 @@ describe('MobileAppShell', () => {
         selectedNote={null}
         onSelectNote={() => undefined}
         onAddNote={() => undefined}
-        onAddNoteWithDate={() => undefined}
         onEditNote={() => undefined}
         onAddSchedule={() => undefined}
         onUpdateSchedule={() => undefined}

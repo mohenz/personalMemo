@@ -70,8 +70,12 @@ export default function Sidebar({
         <div className="flex items-center justify-center lg:justify-start mb-4 lg:mb-6">
           <button
             type="button"
-            onClick={onOpenSettings}
-            title="설정 및 프로필 변경"
+            onClick={() => {
+              setScreen('DASHBOARD');
+              setActiveGroupId('all');
+            }}
+            title="첫 화면으로 이동"
+            aria-label="첫 화면으로 이동"
             className="w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant shadow-sm shrink-0 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <img 
@@ -87,7 +91,7 @@ export default function Sidebar({
         <nav className="flex flex-row lg:flex-col gap-2 lg:gap-1 overflow-x-auto lg:overflow-x-visible no-scrollbar pb-1 lg:pb-0">
           <button
             onClick={() => setScreen('CALENDAR')}
-            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all font-medium ${
               currentScreen === 'CALENDAR'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -102,7 +106,7 @@ export default function Sidebar({
               setScreen('DASHBOARD');
               setActiveGroupId('all');
             }}
-            className={`min-w-max lg:w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center justify-between gap-3 px-4 py-2 rounded-xl text-sm transition-all font-medium ${
               currentScreen === 'DASHBOARD' && activeGroupId === 'all'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -126,7 +130,7 @@ export default function Sidebar({
               setScreen('DASHBOARD');
               setActiveGroupId('starred');
             }}
-            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all font-medium ${
               currentScreen === 'DASHBOARD' && activeGroupId === 'starred'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -157,7 +161,7 @@ export default function Sidebar({
                   setScreen('DASHBOARD');
                   setActiveGroupId(group.id);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium ${
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all font-medium ${
                   currentScreen === 'DASHBOARD' && activeGroupId === group.id
                     ? 'bg-primary-container text-on-primary-container font-semibold'
                     : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -173,7 +177,7 @@ export default function Sidebar({
 
           <button
             onClick={onOpenArchive}
-            className="min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+            className="min-w-max lg:w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
             title="자료실 열기"
           >
             <Archive className="w-5 h-5" />
@@ -182,7 +186,7 @@ export default function Sidebar({
 
           <button
             onClick={() => setScreen('SEARCH')}
-            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all font-medium ${
               currentScreen === 'SEARCH'
                 ? 'bg-primary text-white shadow-soft font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -200,7 +204,7 @@ export default function Sidebar({
               setScreen('DASHBOARD');
               setActiveGroupId('trash');
             }}
-            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+            className={`min-w-max lg:w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm transition-all font-medium ${
               currentScreen === 'DASHBOARD' && activeGroupId === 'trash'
                 ? 'bg-red-50 text-red-700 font-semibold'
                 : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
@@ -216,7 +220,7 @@ export default function Sidebar({
       <div className="hidden lg:flex mt-auto p-4 border-t border-outline-variant/30 flex-col gap-1">
         <button 
           onClick={() => setShowAddFolderModal(true)}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-dashed border-outline text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface hover:border-primary transition-all active:scale-95 text-sm font-semibold cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-dashed border-outline text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface hover:border-primary transition-all active:scale-95 text-sm font-semibold cursor-pointer"
         >
           <FolderPlus className="w-4.5 h-4.5 text-primary" />
           <span>새 폴더 추가</span>
@@ -240,13 +244,6 @@ export default function Sidebar({
             <span>설정</span>
           </button>
 
-          <button 
-            onClick={() => setScreen('SPLASH')}
-            className="flex items-center gap-1.5 py-1 px-1.5 hover:bg-surface-container-high rounded-lg text-on-surface-variant"
-            title="스플래시 화면 다시 보기"
-          >
-            <span>스플래시</span>
-          </button>
         </div>
       </div>
 

@@ -1,29 +1,22 @@
-import { Edit3, Plus } from 'lucide-react';
-import { Note, Schedule } from '../../types';
+import { Plus } from 'lucide-react';
+import { Schedule } from '../../types';
 import HolidayBadges from '../../features/holidays/HolidayBadges';
 import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
 import { toLocalDateString } from '../../utils/date';
-import CalendarNoteDots from './CalendarNoteDots';
 import TimeGrid from './TimeGrid';
 
 interface DayCalendarScreenProps {
   selectedDate: Date;
-  notes: Note[];
   schedules: Schedule[];
   holidays: KoreanHoliday[];
-  onSelectNote: (noteId: string) => void;
-  onAddNoteWithDate: (dateString: string) => void;
   onSelectSchedule: (schedule: Schedule) => void;
   onCreateSchedule: (dateString: string, startTime: string) => void;
 }
 
 export default function DayCalendarScreen({
   selectedDate,
-  notes,
   schedules,
   holidays,
-  onSelectNote,
-  onAddNoteWithDate,
   onSelectSchedule,
   onCreateSchedule,
 }: DayCalendarScreenProps) {
@@ -40,27 +33,15 @@ export default function DayCalendarScreen({
           </h2>
           <HolidayBadges holidays={holidays} />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onCreateSchedule(dateString, '09:00')}
-            className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3.5 h-9 rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-soft cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            새 일정
-          </button>
-          <button
-            type="button"
-            onClick={() => onAddNoteWithDate(dateString)}
-            className="flex items-center gap-1.5 bg-surface-container text-on-surface-variant text-xs font-bold px-3.5 h-9 rounded-xl hover:bg-surface-container-high transition-all cursor-pointer"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            새 메모
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => onCreateSchedule(dateString, '09:00')}
+          className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3.5 h-9 rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-soft cursor-pointer"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          새 일정
+        </button>
       </div>
-
-      <CalendarNoteDots notes={notes} onSelectNote={onSelectNote} />
 
       <div className="flex-1 min-h-0 bg-surface-container-lowest rounded-xl notebook-shadow border border-grid-line overflow-hidden">
         <TimeGrid

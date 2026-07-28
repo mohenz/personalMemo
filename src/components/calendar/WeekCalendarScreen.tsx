@@ -1,30 +1,25 @@
-import { Note, Schedule } from '../../types';
+import { Schedule } from '../../types';
 import HolidayBadges from '../../features/holidays/HolidayBadges';
 import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
 import { getHolidayNames } from '../../features/holidays/koreanHolidayUtils';
 import { toLocalDateString } from '../../utils/date';
-import CalendarNoteDots from './CalendarNoteDots';
 import TimeGrid from './TimeGrid';
 import { getWeekDates, isSameLocalDate } from './calendarUtils';
 
 interface WeekCalendarScreenProps {
   selectedDate: Date;
-  notesByDate: Map<string, Note[]>;
   schedulesByDate: Map<string, Schedule[]>;
   holidaysByDate: Map<string, KoreanHoliday[]>;
   onSelectDate: (date: Date) => void;
-  onSelectNote: (noteId: string) => void;
   onSelectSchedule: (schedule: Schedule) => void;
   onCreateSchedule: (dateString: string, startTime: string) => void;
 }
 
 export default function WeekCalendarScreen({
   selectedDate,
-  notesByDate,
   schedulesByDate,
   holidaysByDate,
   onSelectDate,
-  onSelectNote,
   onSelectSchedule,
   onCreateSchedule,
 }: WeekCalendarScreenProps) {
@@ -39,7 +34,6 @@ export default function WeekCalendarScreen({
         <div className="flex-1 grid grid-cols-7">
           {weekDates.map((date) => {
             const dateString = toLocalDateString(date);
-            const dayNotes = notesByDate.get(dateString) || [];
             const dayHolidays = holidaysByDate.get(dateString) || [];
             const selected = isSameLocalDate(date, selectedDate);
             const currentDay = isSameLocalDate(date, today);
@@ -59,9 +53,6 @@ export default function WeekCalendarScreen({
                   {date.getDate()}
                 </span>
                 <HolidayBadges holidays={dayHolidays} compact />
-                <div className="mt-1 flex justify-center">
-                  <CalendarNoteDots notes={dayNotes} onSelectNote={onSelectNote} />
-                </div>
               </button>
             );
           })}

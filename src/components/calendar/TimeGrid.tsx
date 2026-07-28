@@ -120,13 +120,14 @@ export default function TimeGrid({ days, schedulesByDate, onSelectSchedule, onCr
                         top: scheduleTopPx(schedule.startTime || '00:00'),
                         height: scheduleHeightPx(schedule.startTime || '00:00', schedule.endTime || '01:00'),
                       }}
-                      title={`${schedule.title} (${schedule.startTime}–${schedule.endTime})`}
+                      title={`${schedule.startTime}–${schedule.endTime} ${schedule.title}`}
+                      aria-label={`${schedule.startTime}–${schedule.endTime} ${schedule.title}`}
                     >
+                      <span className="block text-[9px] font-semibold tabular-nums text-on-surface-variant truncate">
+                        {schedule.startTime}–{schedule.endTime}
+                      </span>
                       <span className={`block text-[10px] font-bold truncate ${PRIORITY_COLORS[schedule.priority].text}`}>
                         {schedule.title}
-                      </span>
-                      <span className="block text-[9px] text-on-surface-variant truncate">
-                        {schedule.startTime}–{schedule.endTime}
                       </span>
                     </button>
                   ))}

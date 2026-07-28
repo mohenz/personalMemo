@@ -25,7 +25,6 @@ interface MobileAppShellProps {
   selectedNote: Note | null;
   onSelectNote: (id: string) => void;
   onAddNote: () => void;
-  onAddNoteWithDate: (dateString: string) => void;
   onEditNote: (note: Note) => void;
   onAddSchedule: (draft: ScheduleDraft) => void;
   onUpdateSchedule: (scheduleId: string, draft: ScheduleDraft) => void;
@@ -42,7 +41,6 @@ export default function MobileAppShell({
   selectedNote,
   onSelectNote,
   onAddNote,
-  onAddNoteWithDate,
   onEditNote,
   onAddSchedule,
   onUpdateSchedule,
@@ -159,7 +157,6 @@ export default function MobileAppShell({
               schedules={schedules}
               groups={groups}
               onSelectNote={handleSelectNoteFromCalendar}
-              onAddNoteWithDate={onAddNoteWithDate}
               onAddSchedule={onAddSchedule}
               onUpdateSchedule={onUpdateSchedule}
               onDeleteSchedule={onDeleteSchedule}

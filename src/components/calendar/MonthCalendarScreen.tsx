@@ -1,4 +1,4 @@
-import { Note, Schedule } from '../../types';
+import { Schedule } from '../../types';
 import HolidayBadges from '../../features/holidays/HolidayBadges';
 import { KoreanHoliday } from '../../features/holidays/koreanHolidayTypes';
 import { getHolidayNames } from '../../features/holidays/koreanHolidayUtils';
@@ -7,11 +7,10 @@ import { PRIORITY_COLORS, PRIORITY_ORDER } from './scheduleUtils';
 
 interface MonthCalendarScreenProps {
   selectedDate: Date;
-  notesByDate: Map<string, Note[]>;
   schedulesByDate: Map<string, Schedule[]>;
   holidaysByDate: Map<string, KoreanHoliday[]>;
   onSelectDate: (date: Date) => void;
-  onSelectNote: (noteId: string) => void;
+  onSelectSchedule: (schedule: Schedule) => void;
 }
 
 function highestPriority(schedules: Schedule[]) {
@@ -20,11 +19,10 @@ function highestPriority(schedules: Schedule[]) {
 
 export default function MonthCalendarScreen({
   selectedDate,
-  notesByDate,
   schedulesByDate,
   holidaysByDate,
   onSelectDate,
-  onSelectNote,
+  onSelectSchedule,
 }: MonthCalendarScreenProps) {
   const cells = getMonthCells(selectedDate);
   const today = new Date();
@@ -44,7 +42,6 @@ export default function MonthCalendarScreen({
 
         <div className="grid grid-cols-7 auto-rows-[minmax(56px,1fr)] md:auto-rows-[minmax(112px,1fr)]">
           {cells.map((cell) => {
-            const dayNotes = notesByDate.get(cell.dateString) || [];
             const daySchedules = schedulesByDate.get(cell.dateString) || [];
             const dayHolidays = holidaysByDate.get(cell.dateString) || [];
             const selected = isSameLocalDate(cell.date, selectedDate);
@@ -61,7 +58,7 @@ export default function MonthCalendarScreen({
                   type="button"
                   onClick={() => onSelectDate(cell.date)}
                   className="flex justify-between items-start w-full cursor-pointer"
-                  aria-label={`${cell.date.getMonth() + 1}월 ${cell.date.getDate()}일${dayHolidays.length > 0 ? `, ${getHolidayNames(dayHolidays)}` : ''}, 메모 ${dayNotes.length}개`}
+                  aria-label={`${cell.date.getMonth() + 1}월 ${cell.date.getDate()}일${dayHolidays.length > 0 ? `, ${getHolidayNames(dayHolidays)}` : ''}, 일정 ${daySchedules.length}개`}
                 >
                   <span className={`w-6 h-6 md:w-8 md:h-8 flex items-center justify-center rounded-full text-[10px] md:text-xs font-bold ${selected ? 'bg-primary text-white shadow-soft' : currentDay ? 'ring-2 ring-primary text-primary' : weekday === 0 ? 'text-error' : weekday === 6 ? 'text-primary' : 'text-on-surface'}`}>
                     {cell.date.getDate()}
@@ -70,28 +67,27 @@ export default function MonthCalendarScreen({
                     {topSchedulePriority && (
                       <span className={`w-1.5 h-1.5 rounded-full ${PRIORITY_COLORS[topSchedulePriority].dot}`} />
                     )}
-                    {dayNotes.length > 0 && <span className="w-1.5 h-1.5 bg-primary rounded-full" />}
                   </span>
                 </button>
 
                 <HolidayBadges holidays={dayHolidays} compact />
 
                 <div className="hidden md:mt-auto md:pt-2 md:flex flex-col gap-1 w-full overflow-hidden">
-                  {dayNotes.slice(0, 2).map((note) => (
+                  {daySchedules.slice(0, 2).map((schedule) => (
                     <button
                       type="button"
-                      key={note.id}
+                      key={schedule.id}
                       onClick={(event) => {
                         event.stopPropagation();
-                        onSelectNote(note.id);
+                        onSelectSchedule(schedule);
                       }}
-                      className="bg-surface border-l-2 border-primary text-[10px] font-bold text-on-surface-variant truncate px-1.5 py-0.5 rounded shadow-2xs max-w-full"
+                      className={`border-l-2 text-[9px] font-bold truncate px-1.5 py-0.5 rounded shadow-2xs max-w-full ${PRIORITY_COLORS[schedule.priority].bg} ${PRIORITY_COLORS[schedule.priority].border} ${PRIORITY_COLORS[schedule.priority].text}`}
                     >
-                      {note.title}
+                      {schedule.allDay ? '종일' : schedule.startTime} {schedule.title}
                     </button>
                   ))}
-                  {dayNotes.length > 2 && (
-                    <span className="text-[9px] text-outline font-bold pl-1">+{dayNotes.length - 2}개</span>
+                  {daySchedules.length > 2 && (
+                    <span className="text-[9px] text-outline font-bold pl-1">+{daySchedules.length - 2}개</span>
                   )}
                 </div>
               </div>

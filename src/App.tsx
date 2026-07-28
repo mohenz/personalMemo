@@ -12,7 +12,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Plus, 
   Search, 
-  Settings, 
   SlidersHorizontal,
   FileText,
   Image as ImageIcon,
@@ -562,7 +561,6 @@ export default function App() {
             setSelectedNoteId(id);
             setScreen('DASHBOARD');
           }}
-          onAddNoteWithDate={(date) => handleStartAddNote(date)}
           onAddSchedule={handleAddSchedule}
           onUpdateSchedule={handleUpdateSchedule}
           onDeleteSchedule={handleDeleteSchedule}
@@ -640,14 +638,6 @@ export default function App() {
                     >
                       <Search className="w-5 h-5 text-primary stroke-[2.5]" />
                     </button>
-                    <button 
-                      onClick={() => setShowSettingsModal(true)}
-                      className="hover:bg-surface rounded-full p-2.5 transition-all text-on-surface-variant cursor-pointer"
-                      title="설정 및 테마 변경"
-                    >
-                      <Settings className="w-5 h-5" />
-                    </button>
-                    
                     <div className="h-8 w-[1px] bg-outline-variant/60 mx-2" />
                     
                     <button 
@@ -777,7 +767,6 @@ export default function App() {
               selectedNote={selectedNote}
               onSelectNote={setSelectedNoteId}
               onAddNote={() => handleStartAddNote()}
-              onAddNoteWithDate={(date) => handleStartAddNote(date)}
               onEditNote={handleStartEditNote}
               onAddSchedule={handleAddSchedule}
               onUpdateSchedule={handleUpdateSchedule}
