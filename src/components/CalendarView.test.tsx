@@ -87,6 +87,26 @@ describe('CalendarView selected-day panel', () => {
 
     vi.useRealTimers();
   });
+
+  it('shows a weekly schedule on each configured weekday', () => {
+    vi.useFakeTimers();
+    const markup = renderCalendar(new Date(2026, 6, 23, 12), [{
+      id: 'weekly-schedule',
+      title: '주간 정기 미팅',
+      dateString: '2026-07-21',
+      allDay: false,
+      startTime: '09:30',
+      endTime: '10:30',
+      priority: 'normal',
+      recurrence: { frequency: 'weekly', weekdays: ['TU', 'TH'] },
+      createdAt: '2026-07-21T00:00:00.000Z',
+      updatedAt: '2026-07-21T00:00:00.000Z',
+    }]);
+
+    expect(markup).toContain('aria-label="09:30–10:30 주간 정기 미팅"');
+
+    vi.useRealTimers();
+  });
 });
 
 describe('CalendarView month navigation', () => {

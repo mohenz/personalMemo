@@ -4,10 +4,12 @@ import {
   groupSchedulesByDate,
   minutesToTime,
   scheduleHeightPx,
+  scheduleOccursOnDate,
   scheduleTopPx,
   snapToStep,
   splitAllDaySchedules,
   timeToMinutes,
+  weekdayFromDateString,
 } from './scheduleUtils';
 
 const makeSchedule = (overrides: Partial<Schedule> = {}): Schedule => ({
@@ -74,6 +76,55 @@ describe('groupSchedulesByDate', () => {
     ], '');
 
     expect(grouped.get('2026-07-23')?.map((s) => s.id)).toEqual(['all-day', 'early', 'late']);
+  });
+
+  it('expands a weekly schedule only on selected weekdays within its date range', () => {
+    const recurring = makeSchedule({
+      dateString: '2026-07-21',
+      recurrence: {
+        frequency: 'weekly',
+        weekdays: ['TU', 'TH'],
+        untilDateString: '2026-07-30',
+      },
+    });
+    const grouped = groupSchedulesByDate([recurring], '', [
+      '2026-07-16',
+      '2026-07-20',
+      '2026-07-21',
+      '2026-07-23',
+      '2026-07-28',
+      '2026-07-30',
+      '2026-08-04',
+    ]);
+
+    expect([...grouped.keys()]).toEqual([
+      '2026-07-21',
+      '2026-07-23',
+      '2026-07-28',
+      '2026-07-30',
+    ]);
+  });
+
+  it('keeps a one-time schedule on its exact date when a visible range is supplied', () => {
+    const grouped = groupSchedulesByDate([makeSchedule()], '', ['2026-07-22', '2026-07-23', '2026-07-24']);
+
+    expect([...grouped.keys()]).toEqual(['2026-07-23']);
+  });
+});
+
+describe('weekly recurrence', () => {
+  it('uses local calendar weekdays and observes the start date', () => {
+    const recurring = makeSchedule({
+      dateString: '2026-07-21',
+      recurrence: { frequency: 'weekly', weekdays: ['TU', 'TH'] },
+    });
+
+    expect(weekdayFromDateString('2026-07-21')).toBe('TU');
+    expect(weekdayFromDateString('2026-07-23')).toBe('TH');
+    expect(scheduleOccursOnDate(recurring, '2026-07-16')).toBe(false);
+    expect(scheduleOccursOnDate(recurring, '2026-07-21')).toBe(true);
+    expect(scheduleOccursOnDate(recurring, '2026-07-22')).toBe(false);
+    expect(scheduleOccursOnDate(recurring, '2026-07-23')).toBe(true);
   });
 });
 

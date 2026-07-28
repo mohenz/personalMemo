@@ -1,10 +1,22 @@
-import { Schedule, SchedulePriority } from '../../types';
+import { Schedule, SchedulePriority, ScheduleWeekday } from '../../types';
 
 export const HOUR_HEIGHT_PX = 56;
 export const GRID_START_HOUR = 0;
 export const GRID_END_HOUR = 24;
 export const DEFAULT_SCROLL_HOUR = 7;
 export const TIME_STEP_MINUTES = 30;
+
+export const WEEKDAY_OPTIONS: Array<{ value: ScheduleWeekday; label: string }> = [
+  { value: 'MO', label: '월' },
+  { value: 'TU', label: '화' },
+  { value: 'WE', label: '수' },
+  { value: 'TH', label: '목' },
+  { value: 'FR', label: '금' },
+  { value: 'SA', label: '토' },
+  { value: 'SU', label: '일' },
+];
+
+const WEEKDAY_BY_INDEX: ScheduleWeekday[] = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 
 export const PRIORITY_ORDER: SchedulePriority[] = ['high', 'normal', 'low'];
 
@@ -63,16 +75,39 @@ export function scheduleHeightPx(startTime: string, endTime: string): number {
   return (durationMinutes / 60) * HOUR_HEIGHT_PX;
 }
 
-export function groupSchedulesByDate(schedules: Schedule[], searchQuery: string) {
+export function weekdayFromDateString(dateString: string): ScheduleWeekday {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return WEEKDAY_BY_INDEX[new Date(year, month - 1, day).getDay()];
+}
+
+export function scheduleOccursOnDate(schedule: Schedule, dateString: string) {
+  if (!schedule.recurrence) return schedule.dateString === dateString;
+  if (dateString < schedule.dateString) return false;
+  if (schedule.recurrence.untilDateString && dateString > schedule.recurrence.untilDateString) return false;
+  return schedule.recurrence.weekdays.includes(weekdayFromDateString(dateString));
+}
+
+export function groupSchedulesByDate(
+  schedules: Schedule[],
+  searchQuery: string,
+  visibleDateStrings?: string[],
+) {
   const query = searchQuery.trim().toLocaleLowerCase('ko-KR');
   const schedulesByDate = new Map<string, Schedule[]>();
+  const targetDates = visibleDateStrings ? [...new Set(visibleDateStrings)].sort() : null;
 
   schedules.forEach((schedule) => {
     if (query && !`${schedule.title} ${schedule.memo ?? ''}`.toLocaleLowerCase('ko-KR').includes(query)) return;
 
-    const daySchedules = schedulesByDate.get(schedule.dateString) || [];
-    daySchedules.push(schedule);
-    schedulesByDate.set(schedule.dateString, daySchedules);
+    const occurrenceDates = targetDates
+      ? targetDates.filter((dateString) => scheduleOccursOnDate(schedule, dateString))
+      : [schedule.dateString];
+
+    occurrenceDates.forEach((dateString) => {
+      const daySchedules = schedulesByDate.get(dateString) || [];
+      daySchedules.push(schedule);
+      schedulesByDate.set(dateString, daySchedules);
+    });
   });
 
   schedulesByDate.forEach((daySchedules) => {

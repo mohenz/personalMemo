@@ -291,6 +291,15 @@ export default function App() {
       endTime: draft.allDay ? undefined : draft.endTime,
       priority: draft.priority,
       memo: draft.memo || undefined,
+      recurrence: draft.recurrence
+        ? {
+            frequency: 'weekly',
+            weekdays: [...draft.recurrence.weekdays],
+            ...(draft.recurrence.untilDateString
+              ? { untilDateString: draft.recurrence.untilDateString }
+              : {}),
+          }
+        : undefined,
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -309,6 +318,15 @@ export default function App() {
             endTime: draft.allDay ? undefined : draft.endTime,
             priority: draft.priority,
             memo: draft.memo || undefined,
+            recurrence: draft.recurrence
+              ? {
+                  frequency: 'weekly',
+                  weekdays: [...draft.recurrence.weekdays],
+                  ...(draft.recurrence.untilDateString
+                    ? { untilDateString: draft.recurrence.untilDateString }
+                    : {}),
+                }
+              : undefined,
             updatedAt: formatTimestamp(),
           }
         : schedule

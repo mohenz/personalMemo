@@ -12,6 +12,8 @@ import WeekCalendarScreen from './calendar/WeekCalendarScreen';
 import {
   CalendarViewMode,
   formatCalendarPeriod,
+  getMonthCells,
+  getWeekDates,
   groupCalendarNotes,
   shiftCalendarDate,
 } from './calendar/calendarUtils';
@@ -60,13 +62,18 @@ export default function CalendarView({
   const [searchQuery, setSearchQuery] = useState('');
   const [scheduleModal, setScheduleModal] = useState<ScheduleModalState>({ mode: 'closed' });
 
+  const selectedDateString = toLocalDateString(selectedDate);
+  const visibleDateStrings = useMemo(() => {
+    if (viewMode === 'month') return getMonthCells(selectedDate).map((cell) => cell.dateString);
+    if (viewMode === 'week') return getWeekDates(selectedDate).map(toLocalDateString);
+    return [selectedDateString];
+  }, [selectedDate, selectedDateString, viewMode]);
   const schedulesByDate = useMemo(
-    () => groupSchedulesByDate(schedules, searchQuery),
-    [schedules, searchQuery],
+    () => groupSchedulesByDate(schedules, searchQuery, visibleDateStrings),
+    [schedules, searchQuery, visibleDateStrings],
   );
   const notesByDate = useMemo(() => groupCalendarNotes(notes, ''), [notes]);
   const holidaysByDate = useMemo(() => groupKoreanHolidays(koreanHolidays), []);
-  const selectedDateString = toLocalDateString(selectedDate);
   const selectedNotes = notesByDate.get(selectedDateString) || [];
   const selectedSchedules = schedulesByDate.get(selectedDateString) || [];
   const selectedHolidays = holidaysByDate.get(selectedDateString) || [];

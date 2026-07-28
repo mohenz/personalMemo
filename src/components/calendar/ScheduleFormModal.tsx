@@ -1,7 +1,7 @@
-import { FormEvent, useState } from 'react';
-import { Trash2, X } from 'lucide-react';
-import { Schedule, SchedulePriority } from '../../types';
-import { PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_ORDER, TIME_STEP_MINUTES, minutesToTime, snapToStep, timeToMinutes } from './scheduleUtils';
+import { FormEvent, useRef, useState } from 'react';
+import { CalendarDays, Trash2, X } from 'lucide-react';
+import { Schedule, SchedulePriority, ScheduleRecurrence } from '../../types';
+import { PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_ORDER, TIME_STEP_MINUTES, WEEKDAY_OPTIONS, minutesToTime, snapToStep, timeToMinutes, weekdayFromDateString } from './scheduleUtils';
 
 export interface ScheduleDraft {
   title: string;
@@ -11,6 +11,7 @@ export interface ScheduleDraft {
   endTime: string;
   priority: SchedulePriority;
   memo: string;
+  recurrence: ScheduleRecurrence | null;
 }
 
 interface ScheduleFormModalProps {
@@ -32,6 +33,9 @@ function toDraft(schedule: Schedule | null, initialDateString: string, initialSt
       endTime: schedule.endTime || minutesToTime(timeToMinutes(initialStartTime || '09:00') + 60),
       priority: schedule.priority,
       memo: schedule.memo || '',
+      recurrence: schedule.recurrence
+        ? { ...schedule.recurrence, weekdays: [...schedule.recurrence.weekdays] }
+        : null,
     };
   }
 
@@ -44,6 +48,7 @@ function toDraft(schedule: Schedule | null, initialDateString: string, initialSt
     endTime: minutesToTime(timeToMinutes(startTime) + 60),
     priority: 'normal',
     memo: '',
+    recurrence: null,
   };
 }
 
@@ -57,6 +62,8 @@ export default function ScheduleFormModal({
 }: ScheduleFormModalProps) {
   const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(schedule, initialDateString, initialStartTime));
   const [timeError, setTimeError] = useState<string | null>(null);
+  const [recurrenceError, setRecurrenceError] = useState<string | null>(null);
+  const recurrenceEndDateRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -67,7 +74,18 @@ export default function ScheduleFormModal({
       return;
     }
 
+    if (draft.recurrence && draft.recurrence.weekdays.length === 0) {
+      setRecurrenceError('반복할 요일을 한 개 이상 선택해 주세요.');
+      return;
+    }
+
+    if (draft.recurrence?.untilDateString && draft.recurrence.untilDateString < draft.dateString) {
+      setRecurrenceError('반복 종료일은 시작일과 같거나 이후여야 합니다.');
+      return;
+    }
+
     setTimeError(null);
+    setRecurrenceError(null);
     onSave({ ...draft, title: draft.title.trim() });
   };
 
@@ -78,7 +96,7 @@ export default function ScheduleFormModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="schedule-form-title"
-        className="bg-surface-container-lowest text-on-surface p-6 rounded-2xl w-96 max-w-full shadow-2xl border border-outline-variant flex flex-col gap-4 select-text"
+        className="bg-surface-container-lowest text-on-surface p-6 rounded-2xl w-96 max-w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl border border-outline-variant flex flex-col gap-4 select-text"
       >
         <div className="flex items-center justify-between">
           <h3 id="schedule-form-title" className="font-bold text-lg text-on-surface">
@@ -114,6 +132,104 @@ export default function ScheduleFormModal({
           onChange={(event) => setDraft((prev) => ({ ...prev, dateString: event.target.value }))}
           className="w-full h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm text-on-surface bg-surface-container-low"
         />
+
+        <div className="rounded-xl border border-outline-variant bg-surface-container-low p-3 space-y-3">
+          <label className="flex items-center justify-between gap-3 text-sm font-semibold text-on-surface-variant cursor-pointer">
+            <span>매주 반복</span>
+            <input
+              type="checkbox"
+              checked={Boolean(draft.recurrence)}
+              onChange={(event) => {
+                setRecurrenceError(null);
+                setDraft((prev) => ({
+                  ...prev,
+                  recurrence: event.target.checked
+                    ? {
+                        frequency: 'weekly',
+                        weekdays: [prev.dateString ? weekdayFromDateString(prev.dateString) : 'MO'],
+                      }
+                    : null,
+                }));
+              }}
+              className="w-4 h-4 accent-primary cursor-pointer"
+            />
+          </label>
+
+          {draft.recurrence && (
+            <div className="space-y-3">
+              <fieldset>
+                <legend className="mb-2 text-xs font-bold text-on-surface-variant">반복 요일</legend>
+                <div className="grid grid-cols-7 gap-1">
+                  {WEEKDAY_OPTIONS.map((option) => {
+                    const selected = draft.recurrence?.weekdays.includes(option.value) ?? false;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-label={`${option.label}요일`}
+                        aria-pressed={selected}
+                        onClick={() => {
+                          setRecurrenceError(null);
+                          setDraft((prev) => {
+                            if (!prev.recurrence) return prev;
+                            const weekdays = prev.recurrence.weekdays.includes(option.value)
+                              ? prev.recurrence.weekdays.filter((weekday) => weekday !== option.value)
+                              : [...prev.recurrence.weekdays, option.value];
+                            return { ...prev, recurrence: { ...prev.recurrence, weekdays } };
+                          });
+                        }}
+                        className={`h-8 rounded-lg text-xs font-bold transition-colors ${selected ? 'bg-primary text-white' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high'}`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <label className="block text-xs font-bold text-on-surface-variant">
+                반복 종료일 <span className="font-medium text-outline">(선택)</span>
+                <div className="relative mt-1">
+                  <input
+                    ref={recurrenceEndDateRef}
+                    type="date"
+                    min={draft.dateString}
+                    value={draft.recurrence.untilDateString || ''}
+                    onChange={(event) => {
+                      setRecurrenceError(null);
+                      setDraft((prev) => prev.recurrence
+                        ? {
+                            ...prev,
+                            recurrence: {
+                              ...prev.recurrence,
+                              untilDateString: event.target.value || undefined,
+                            },
+                          }
+                        : prev);
+                    }}
+                    className="w-full h-10 pl-3 pr-10 border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm text-on-surface bg-surface-container-lowest"
+                  />
+                  <button
+                    type="button"
+                    aria-label="반복 종료일 달력 열기"
+                    title="달력에서 반복 종료일 선택"
+                    onClick={() => {
+                      const input = recurrenceEndDateRef.current;
+                      if (!input) return;
+                      if (typeof input.showPicker === 'function') input.showPicker();
+                      else input.focus();
+                    }}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                  </button>
+                </div>
+              </label>
+              <p className="text-[11px] text-outline">수정과 삭제는 반복 일정 전체에 적용됩니다.</p>
+            </div>
+          )}
+        </div>
+        {recurrenceError && <p className="text-xs text-error font-semibold">{recurrenceError}</p>}
 
         <label className="flex items-center gap-2 text-sm font-semibold text-on-surface-variant cursor-pointer">
           <input

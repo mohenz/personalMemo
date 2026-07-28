@@ -28,6 +28,14 @@ export type ScreenType = 'SPLASH' | 'DASHBOARD' | 'EDITOR' | 'SEARCH' | 'CALENDA
 
 export type SchedulePriority = 'high' | 'normal' | 'low';
 
+export type ScheduleWeekday = 'SU' | 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA';
+
+export interface ScheduleRecurrence {
+  frequency: 'weekly';
+  weekdays: ScheduleWeekday[];
+  untilDateString?: string;
+}
+
 export interface Schedule {
   id: string;
   title: string;
@@ -37,6 +45,7 @@ export interface Schedule {
   endTime?: string; // "HH:mm", allDay=false일 때 필수
   priority: SchedulePriority;
   memo?: string;
+  recurrence?: ScheduleRecurrence;
   createdAt: string;
   updatedAt: string;
 }
