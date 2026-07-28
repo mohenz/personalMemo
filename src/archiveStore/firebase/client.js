@@ -1,6 +1,6 @@
 import { getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getEnv } from '../core/env.js';
 
@@ -30,8 +30,22 @@ const requiredConfig = [
 
 export const isFirebaseConfigured = requiredConfig.every(Boolean);
 
+function initDb(app) {
+  // This module and src/firebase/client.ts share the same underlying Firebase
+  // App (via getApps()[0]), and whichever one's Firestore call runs first
+  // (by import-graph order) locks in the settings for both. Both must request
+  // ignoreUndefinedProperties so optional fields (e.g. an all-day schedule's
+  // missing startTime/endTime) don't make Firestore reject the whole write —
+  // whichever runs second safely falls back to the already-initialized instance.
+  try {
+    return initializeFirestore(app, { ignoreUndefinedProperties: true });
+  } catch {
+    return getFirestore(app);
+  }
+}
+
 export const firebaseApp = isFirebaseConfigured ? (getApps()[0] || initializeApp(firebaseConfig)) : null;
 export const auth = firebaseApp ? getAuth(firebaseApp) : null;
-export const db = firebaseApp ? getFirestore(firebaseApp) : null;
+export const db = firebaseApp ? initDb(firebaseApp) : null;
 export const storage = firebaseApp ? getStorage(firebaseApp) : null;
 
