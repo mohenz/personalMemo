@@ -81,9 +81,14 @@ export default function MonthCalendarScreen({
                         event.stopPropagation();
                         onSelectSchedule(schedule);
                       }}
-                      className={`border-l-2 text-[9px] font-bold truncate px-1.5 py-0.5 rounded shadow-2xs max-w-full ${PRIORITY_COLORS[schedule.priority].bg} ${PRIORITY_COLORS[schedule.priority].border} ${PRIORITY_COLORS[schedule.priority].text}`}
+                      className={`border-l-2 flex items-baseline gap-1 overflow-hidden px-1.5 py-0.5 rounded shadow-2xs max-w-full text-left ${PRIORITY_COLORS[schedule.priority].bg} ${PRIORITY_COLORS[schedule.priority].border}`}
                     >
-                      {schedule.allDay ? '종일' : schedule.startTime} {schedule.title}
+                      <span className="text-[10px] font-semibold tabular-nums shrink-0 text-on-surface-variant">
+                        {schedule.allDay ? '종일' : schedule.startTime}
+                      </span>
+                      <span className={`text-xs font-bold truncate min-w-0 ${PRIORITY_COLORS[schedule.priority].text}`}>
+                        {schedule.title}
+                      </span>
                     </button>
                   ))}
                   {daySchedules.length > 2 && (

@@ -1,7 +1,7 @@
 import { FormEvent, useRef, useState } from 'react';
 import { CalendarDays, Trash2, X } from 'lucide-react';
 import { Schedule, SchedulePriority, ScheduleRecurrence } from '../../types';
-import { PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_ORDER, TIME_STEP_MINUTES, WEEKDAY_OPTIONS, minutesToTime, snapToStep, timeToMinutes, weekdayFromDateString } from './scheduleUtils';
+import { PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_ORDER, SCHEDULE_INPUT_STEP_MINUTES, WEEKDAY_OPTIONS, minutesToTime, snapToStep, timeToMinutes, weekdayFromDateString } from './scheduleUtils';
 
 export interface ScheduleDraft {
   title: string;
@@ -23,14 +23,68 @@ interface ScheduleFormModalProps {
   onClose: () => void;
 }
 
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
+const MINUTE_OPTIONS = Array.from(
+  { length: 60 / SCHEDULE_INPUT_STEP_MINUTES },
+  (_, index) => String(index * SCHEDULE_INPUT_STEP_MINUTES).padStart(2, '0'),
+);
+
+interface ScheduleTimeSelectProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function ScheduleTimeSelect({ label, value, onChange }: ScheduleTimeSelectProps) {
+  const [hour = '00', minute = '00'] = value.split(':');
+
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="flex-1 min-w-0 h-11 px-2 border border-outline-variant rounded-xl focus-within:ring-2 focus-within:ring-primary text-sm text-on-surface bg-surface-container-low flex items-center gap-1"
+    >
+      <select
+        aria-label={`${label} 시`}
+        value={hour}
+        onChange={(event) => onChange(`${event.target.value}:${minute}`)}
+        className="schedule-time-select min-w-0 flex-1 h-full bg-transparent text-center focus:outline-none cursor-pointer"
+      >
+        {HOUR_OPTIONS.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+      <span className="text-outline font-bold">:</span>
+      <select
+        aria-label={`${label} 분`}
+        value={minute}
+        onChange={(event) => onChange(`${hour}:${event.target.value}`)}
+        className="schedule-time-select min-w-0 flex-1 h-full bg-transparent text-center focus:outline-none cursor-pointer"
+      >
+        {MINUTE_OPTIONS.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function toDraft(schedule: Schedule | null, initialDateString: string, initialStartTime?: string): ScheduleDraft {
   if (schedule) {
+    const startTime = snapToStep(
+      schedule.startTime || initialStartTime || '09:00',
+      SCHEDULE_INPUT_STEP_MINUTES,
+    );
+    const endTime = snapToStep(
+      schedule.endTime || minutesToTime(timeToMinutes(initialStartTime || '09:00') + 60),
+      SCHEDULE_INPUT_STEP_MINUTES,
+    );
     return {
       title: schedule.title,
       dateString: schedule.dateString,
       allDay: schedule.allDay,
-      startTime: schedule.startTime || initialStartTime || '09:00',
-      endTime: schedule.endTime || minutesToTime(timeToMinutes(initialStartTime || '09:00') + 60),
+      startTime,
+      endTime,
       priority: schedule.priority,
       memo: schedule.memo || '',
       recurrence: schedule.recurrence
@@ -39,7 +93,7 @@ function toDraft(schedule: Schedule | null, initialDateString: string, initialSt
     };
   }
 
-  const startTime = initialStartTime || '09:00';
+  const startTime = snapToStep(initialStartTime || '09:00', SCHEDULE_INPUT_STEP_MINUTES);
   return {
     title: '',
     dateString: initialDateString,
@@ -243,30 +297,16 @@ export default function ScheduleFormModal({
 
         {!draft.allDay && (
           <div className="flex items-center gap-2">
-            <input
-              type="time"
-              step={TIME_STEP_MINUTES * 60}
-              required={!draft.allDay}
-              aria-label="시작 시간"
+            <ScheduleTimeSelect
+              label="시작 시간"
               value={draft.startTime}
-              onChange={(event) => {
-                if (!event.target.value) return;
-                setDraft((prev) => ({ ...prev, startTime: snapToStep(event.target.value) }));
-              }}
-              className="flex-1 h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm text-on-surface bg-surface-container-low"
+              onChange={(startTime) => setDraft((prev) => ({ ...prev, startTime }))}
             />
             <span className="text-outline text-sm">–</span>
-            <input
-              type="time"
-              step={TIME_STEP_MINUTES * 60}
-              required={!draft.allDay}
-              aria-label="종료 시간"
+            <ScheduleTimeSelect
+              label="종료 시간"
               value={draft.endTime}
-              onChange={(event) => {
-                if (!event.target.value) return;
-                setDraft((prev) => ({ ...prev, endTime: snapToStep(event.target.value) }));
-              }}
-              className="flex-1 h-11 px-3 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm text-on-surface bg-surface-container-low"
+              onChange={(endTime) => setDraft((prev) => ({ ...prev, endTime }))}
             />
           </div>
         )}

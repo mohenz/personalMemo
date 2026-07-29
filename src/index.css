@@ -103,6 +103,24 @@ body,
     background: #1e293b;
   }
 
+  .schedule-time-select {
+    color-scheme: light;
+  }
+
+  .schedule-time-select option {
+    color: #191c1e;
+    background-color: #ffffff;
+  }
+
+  .dark .schedule-time-select {
+    color-scheme: dark;
+  }
+
+  .dark .schedule-time-select option {
+    color: #f8fafc;
+    background-color: #0b111e;
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

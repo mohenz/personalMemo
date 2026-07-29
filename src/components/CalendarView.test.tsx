@@ -21,6 +21,15 @@ const renderCalendar = (date: Date, schedules: Schedule[] = [], notes: Note[] = 
 describe('CalendarView current date', () => {
   afterEach(() => vi.useRealTimers());
 
+  it('uses the compact responsive font size for the period title', () => {
+    vi.useFakeTimers();
+    const markup = renderCalendar(new Date(2026, 6, 14, 12));
+
+    expect(markup).toContain(
+      'class="font-sans text-base md:text-lg font-bold text-on-background truncate">2026년 7월',
+    );
+  });
+
   it.each([
     [new Date(2026, 0, 1, 12), '2026년 1월', '1월 1일'],
     [new Date(2026, 1, 28, 12), '2026년 2월', '2월 28일'],
@@ -83,6 +92,12 @@ describe('CalendarView selected-day panel', () => {
     expect(scheduleContent).toBeDefined();
     expect(scheduleContent!.indexOf('13:00–15:00')).toBeLessThan(
       scheduleContent!.indexOf('이마트앱팀 미팅'),
+    );
+    expect(markup).toContain(
+      'class="text-[10px] font-semibold tabular-nums shrink-0 text-on-surface-variant">13:00',
+    );
+    expect(markup).toContain(
+      'class="text-xs font-bold truncate min-w-0 text-error">이마트앱팀 미팅',
     );
 
     vi.useRealTimers();

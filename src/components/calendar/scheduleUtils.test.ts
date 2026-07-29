@@ -55,6 +55,14 @@ describe('time math', () => {
     expect(snapToStep('09:44')).toBe('09:30');
     expect(snapToStep('09:45')).toBe('10:00');
   });
+
+  it('supports the 10-minute step used by schedule time inputs', () => {
+    expect(snapToStep('09:04', 10)).toBe('09:00');
+    expect(snapToStep('09:05', 10)).toBe('09:10');
+    expect(snapToStep('09:14', 10)).toBe('09:10');
+    expect(snapToStep('09:15', 10)).toBe('09:20');
+    expect(snapToStep('23:59', 10)).toBe('23:50');
+  });
 });
 
 describe('groupSchedulesByDate', () => {

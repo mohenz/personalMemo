@@ -33,5 +33,9 @@ describe('TimeGrid schedule layout', () => {
     expect(scheduleContent!.indexOf('09:30–11:30')).toBeLessThan(
       scheduleContent!.indexOf('요구사항인터뷰(디전팀)'),
     );
+    expect(scheduleContent).toContain(
+      'class="block text-[10px] font-semibold tabular-nums text-on-surface-variant truncate"',
+    );
+    expect(scheduleContent).toContain('class="block text-xs font-bold truncate text-error"');
   });
 });

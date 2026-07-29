@@ -55,7 +55,7 @@ export default function TimeGrid({ days, schedulesByDate, onSelectSchedule, onCr
                     key={schedule.id}
                     type="button"
                     onClick={() => onSelectSchedule(schedule)}
-                    className={`text-left text-[10px] font-bold px-1.5 py-0.5 rounded truncate border ${PRIORITY_COLORS[schedule.priority].bg} ${PRIORITY_COLORS[schedule.priority].border} ${PRIORITY_COLORS[schedule.priority].text}`}
+                    className={`text-left text-xs font-bold px-1.5 py-0.5 rounded truncate border ${PRIORITY_COLORS[schedule.priority].bg} ${PRIORITY_COLORS[schedule.priority].border} ${PRIORITY_COLORS[schedule.priority].text}`}
                     title={schedule.title}
                   >
                     {schedule.title}
@@ -123,10 +123,10 @@ export default function TimeGrid({ days, schedulesByDate, onSelectSchedule, onCr
                       title={`${schedule.startTime}–${schedule.endTime} ${schedule.title}`}
                       aria-label={`${schedule.startTime}–${schedule.endTime} ${schedule.title}`}
                     >
-                      <span className="block text-[9px] font-semibold tabular-nums text-on-surface-variant truncate">
+                      <span className="block text-[10px] font-semibold tabular-nums text-on-surface-variant truncate">
                         {schedule.startTime}–{schedule.endTime}
                       </span>
-                      <span className={`block text-[10px] font-bold truncate ${PRIORITY_COLORS[schedule.priority].text}`}>
+                      <span className={`block text-xs font-bold truncate ${PRIORITY_COLORS[schedule.priority].text}`}>
                         {schedule.title}
                       </span>
                     </button>

@@ -105,7 +105,7 @@ export default function CalendarView({
       <header className="sticky top-0 w-full flex flex-col gap-3 px-4 md:px-8 py-3 z-20 bg-background/90 backdrop-blur-md border-b border-grid-line shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 md:gap-5 min-w-0">
-            <h1 className="font-sans text-lg md:text-xl font-bold text-on-background truncate">
+            <h1 className="font-sans text-base md:text-lg font-bold text-on-background truncate">
               {formatCalendarPeriod(selectedDate, viewMode)}
             </h1>
 

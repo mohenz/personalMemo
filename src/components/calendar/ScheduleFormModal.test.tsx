@@ -52,5 +52,22 @@ describe('ScheduleFormModal weekly recurrence', () => {
 
     expect(markup).toContain('매주 반복');
     expect(markup).not.toContain('반복 요일');
+    expect(markup).not.toContain('type="time"');
+    expect(markup).toContain('role="group" aria-label="시작 시간"');
+    expect(markup).toContain('role="group" aria-label="종료 시간"');
+    expect(markup.match(/schedule-time-select/g)).toHaveLength(4);
+
+    const startMinuteOptions = markup.match(
+      /<select aria-label="시작 시간 분"[^>]*>(.*?)<\/select>/,
+    )?.[1];
+    expect(startMinuteOptions).toBeDefined();
+    expect(startMinuteOptions!.match(/<option/g)).toHaveLength(6);
+    expect(startMinuteOptions).toContain('value="00"');
+    expect(startMinuteOptions).toContain('value="10"');
+    expect(startMinuteOptions).toContain('value="20"');
+    expect(startMinuteOptions).toContain('value="30"');
+    expect(startMinuteOptions).toContain('value="40"');
+    expect(startMinuteOptions).toContain('value="50"');
+    expect(startMinuteOptions).not.toContain('value="01"');
   });
 });

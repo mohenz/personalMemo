@@ -5,6 +5,7 @@ export const GRID_START_HOUR = 0;
 export const GRID_END_HOUR = 24;
 export const DEFAULT_SCROLL_HOUR = 7;
 export const TIME_STEP_MINUTES = 30;
+export const SCHEDULE_INPUT_STEP_MINUTES = 10;
 
 export const WEEKDAY_OPTIONS: Array<{ value: ScheduleWeekday; label: string }> = [
   { value: 'MO', label: '월' },
@@ -60,9 +61,12 @@ export function minutesToTime(totalMinutes: number): string {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
-export function snapToStep(time: string): string {
+export function snapToStep(time: string, stepMinutes = TIME_STEP_MINUTES): string {
   const minutes = timeToMinutes(time);
-  const snapped = Math.round(minutes / TIME_STEP_MINUTES) * TIME_STEP_MINUTES;
+  const snapped = Math.min(
+    Math.round(minutes / stepMinutes) * stepMinutes,
+    24 * 60 - stepMinutes,
+  );
   return minutesToTime(snapped);
 }
 
