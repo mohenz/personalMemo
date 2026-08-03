@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, FileText, Folder } from 'lucide-react';
+import { Calendar, FileText, Folder, Trash2 } from 'lucide-react';
 
-export type MobileTab = 'NOTES' | 'CALENDAR' | 'FILES';
+export type MobileTab = 'NOTES' | 'CALENDAR' | 'FILES' | 'TRASH';
 
 interface MobileBottomNavProps {
   activeTab: MobileTab;
@@ -12,6 +12,7 @@ const TABS: Array<{ id: MobileTab; label: string; Icon: React.ElementType }> = [
   { id: 'NOTES', label: '메모', Icon: FileText },
   { id: 'CALENDAR', label: '캘린더', Icon: Calendar },
   { id: 'FILES', label: '파일', Icon: Folder },
+  { id: 'TRASH', label: '휴지통', Icon: Trash2 },
 ];
 
 export default function MobileBottomNav({ activeTab, onChangeTab }: MobileBottomNavProps) {

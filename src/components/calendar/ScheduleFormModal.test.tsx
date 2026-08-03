@@ -56,6 +56,7 @@ describe('ScheduleFormModal weekly recurrence', () => {
     expect(markup).toContain('role="group" aria-label="시작 시간"');
     expect(markup).toContain('role="group" aria-label="종료 시간"');
     expect(markup.match(/schedule-time-select/g)).toHaveLength(4);
+    expect(markup).toContain('알림');
 
     const startMinuteOptions = markup.match(
       /<select aria-label="시작 시간 분"[^>]*>(.*?)<\/select>/,

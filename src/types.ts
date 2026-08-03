@@ -36,6 +36,25 @@ export interface ScheduleRecurrence {
   untilDateString?: string;
 }
 
+export interface ScheduleReminder {
+  enabled: boolean;
+  minutesBefore: 10 | 30 | 60 | 1440;
+  frequency: 'once' | 'daily' | 'weekly';
+}
+
+export interface NotificationSettings {
+  browserPermission: boolean;
+  dailyDigest: {
+    enabled: boolean;
+    time: string;
+  };
+  weeklyDigest: {
+    enabled: boolean;
+    dayOfWeek: number;
+    time: string;
+  };
+}
+
 export interface Schedule {
   id: string;
   title: string;
@@ -46,6 +65,8 @@ export interface Schedule {
   priority: SchedulePriority;
   memo?: string;
   recurrence?: ScheduleRecurrence;
+  reminder?: ScheduleReminder;
+  isDeleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -5,6 +5,7 @@ import MobileNoteListScreen from './screens/MobileNoteListScreen';
 import MobileNoteDetailScreen from './screens/MobileNoteDetailScreen';
 import MobileFileListScreen, { ArchiveFile } from './screens/MobileFileListScreen';
 import MobileFilePreviewScreen from './screens/MobileFilePreviewScreen';
+import MobileTrashScreen from './screens/MobileTrashScreen';
 import CalendarView from '../components/CalendarView';
 import { ScheduleDraft } from '../components/calendar/ScheduleFormModal';
 import { useArchiveFiles } from '../archiveStore/features/archive/useArchiveFiles.js';
@@ -29,6 +30,11 @@ interface MobileAppShellProps {
   onAddSchedule: (draft: ScheduleDraft) => void;
   onUpdateSchedule: (scheduleId: string, draft: ScheduleDraft) => void;
   onDeleteSchedule: (scheduleId: string) => void;
+  trashedSchedules?: Schedule[];
+  onRestoreNote?: (noteId: string) => void;
+  onPermanentlyDeleteNote?: (noteId: string) => void;
+  onRestoreSchedule?: (scheduleId: string) => void;
+  onPermanentlyDeleteSchedule?: (scheduleId: string) => void;
   userId: string;
   profileImage: string;
   onOpenSettings: () => void;
@@ -45,6 +51,11 @@ export default function MobileAppShell({
   onAddSchedule,
   onUpdateSchedule,
   onDeleteSchedule,
+  trashedSchedules = [],
+  onRestoreNote = () => undefined,
+  onPermanentlyDeleteNote = () => undefined,
+  onRestoreSchedule = () => undefined,
+  onPermanentlyDeleteSchedule = () => undefined,
   userId,
   profileImage,
   onOpenSettings,
@@ -182,6 +193,17 @@ export default function MobileAppShell({
         ) : (
           <MobileFilePreviewScreen file={selectedFile} onBack={() => setFileView('LIST')} />
         ))}
+
+      {activeTab === 'TRASH' && (
+        <MobileTrashScreen
+          notes={notes.filter(note => note.isDeleted)}
+          schedules={trashedSchedules}
+          onRestoreNote={onRestoreNote}
+          onPermanentlyDeleteNote={onPermanentlyDeleteNote}
+          onRestoreSchedule={onRestoreSchedule}
+          onPermanentlyDeleteSchedule={onPermanentlyDeleteSchedule}
+        />
+      )}
 
       <MobileBottomNav activeTab={activeTab} onChangeTab={setActiveTab} />
     </div>

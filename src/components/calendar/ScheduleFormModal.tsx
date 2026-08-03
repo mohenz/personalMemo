@@ -1,6 +1,6 @@
 import { FormEvent, useRef, useState } from 'react';
-import { CalendarDays, Trash2, X } from 'lucide-react';
-import { Schedule, SchedulePriority, ScheduleRecurrence } from '../../types';
+import { Bell, CalendarDays, Trash2, X } from 'lucide-react';
+import { Schedule, SchedulePriority, ScheduleRecurrence, ScheduleReminder } from '../../types';
 import { PRIORITY_COLORS, PRIORITY_LABELS, PRIORITY_ORDER, SCHEDULE_INPUT_STEP_MINUTES, WEEKDAY_OPTIONS, minutesToTime, snapToStep, timeToMinutes, weekdayFromDateString } from './scheduleUtils';
 
 export interface ScheduleDraft {
@@ -12,6 +12,7 @@ export interface ScheduleDraft {
   priority: SchedulePriority;
   memo: string;
   recurrence: ScheduleRecurrence | null;
+  reminder: ScheduleReminder | null;
 }
 
 interface ScheduleFormModalProps {
@@ -90,6 +91,7 @@ function toDraft(schedule: Schedule | null, initialDateString: string, initialSt
       recurrence: schedule.recurrence
         ? { ...schedule.recurrence, weekdays: [...schedule.recurrence.weekdays] }
         : null,
+      reminder: schedule.reminder ? { ...schedule.reminder } : null,
     };
   }
 
@@ -103,6 +105,7 @@ function toDraft(schedule: Schedule | null, initialDateString: string, initialSt
     priority: 'normal',
     memo: '',
     recurrence: null,
+    reminder: null,
   };
 }
 
@@ -341,15 +344,67 @@ export default function ScheduleFormModal({
           className="w-full px-3 py-2 border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm text-on-surface placeholder:text-outline bg-surface-container-low resize-none select-text"
         />
 
+        <div className="rounded-xl border border-outline-variant bg-surface-container-low p-3 space-y-3">
+          <label className="flex cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-on-surface-variant">
+            <span className="flex items-center gap-2"><Bell className="h-4 w-4 text-primary" />알림</span>
+            <input
+              type="checkbox"
+              checked={Boolean(draft.reminder?.enabled)}
+              onChange={(event) => setDraft((prev) => ({
+                ...prev,
+                reminder: event.target.checked
+                  ? (prev.reminder || { enabled: true, minutesBefore: 10, frequency: prev.recurrence ? 'weekly' : 'once' })
+                  : null,
+              }))}
+              className="h-4 w-4 cursor-pointer accent-primary"
+            />
+          </label>
+
+          {draft.reminder?.enabled && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="text-xs font-bold text-on-surface-variant">
+                알림 시점
+                <select
+                  aria-label="일정 알림 시점"
+                  value={draft.reminder.minutesBefore}
+                  onChange={(event) => setDraft((prev) => prev.reminder ? ({ ...prev, reminder: { ...prev.reminder, minutesBefore: Number(event.target.value) as ScheduleReminder['minutesBefore'] } }) : prev)}
+                  className="mt-1 h-10 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value={10}>10분 전</option>
+                  <option value={30}>30분 전</option>
+                  <option value={60}>1시간 전</option>
+                  <option value={1440}>전날</option>
+                </select>
+              </label>
+              <label className="text-xs font-bold text-on-surface-variant">
+                알림 빈도
+                <select
+                  aria-label="일정 알림 빈도"
+                  value={draft.reminder.frequency}
+                  onChange={(event) => setDraft((prev) => prev.reminder ? ({ ...prev, reminder: { ...prev.reminder, frequency: event.target.value as ScheduleReminder['frequency'] } }) : prev)}
+                  className="mt-1 h-10 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="once">한 번</option>
+                  <option value="daily">매일</option>
+                  <option value="weekly">매주</option>
+                </select>
+              </label>
+            </div>
+          )}
+          <p className="text-[11px] text-outline">브라우저가 열려 있고 설정에서 알림을 허용한 동안 작동합니다.</p>
+        </div>
+
         <div className="flex items-center justify-between gap-2 text-sm font-semibold">
           {schedule && onDelete ? (
             <button
               type="button"
-              onClick={() => onDelete(schedule.id)}
+              onClick={() => {
+                if (confirm('이 일정을 휴지통으로 이동하시겠습니까?')) onDelete(schedule.id);
+              }}
               className="flex items-center gap-1.5 px-3 py-2 text-error hover:bg-error/10 rounded-xl transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              삭제
+              휴지통으로 이동
             </button>
           ) : (
             <span />

@@ -2,13 +2,14 @@ import { User, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPas
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { auth, db, isFirebaseConfigured, storage } from '../firebase/client';
-import { Group, Note, Schedule } from '../types';
+import { Group, Note, NotificationSettings, Schedule } from '../types';
 
 export interface MemoCloudState {
   darkMode: boolean;
   groups: Group[];
   notes: Note[];
   schedules: Schedule[];
+  notificationSettings?: NotificationSettings;
   profileImage: string;
 }
 
