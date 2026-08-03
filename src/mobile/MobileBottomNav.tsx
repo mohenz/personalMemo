@@ -18,7 +18,7 @@ const TABS: Array<{ id: MobileTab; label: string; Icon: React.ElementType }> = [
 export default function MobileBottomNav({ activeTab, onChangeTab }: MobileBottomNavProps) {
   return (
     <nav
-      className="relative z-30 flex items-stretch border-t border-grid-line bg-background shrink-0"
+      className="relative z-30 grid w-full min-w-0 max-w-full shrink-0 grid-cols-4 overflow-hidden border-t border-grid-line bg-background"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {TABS.map(({ id, label, Icon }) => (
@@ -26,13 +26,13 @@ export default function MobileBottomNav({ activeTab, onChangeTab }: MobileBottom
           key={id}
           type="button"
           onClick={() => onChangeTab(id)}
-          className={`flex-1 flex flex-col items-center justify-center gap-1 h-14 min-h-[44px] transition-colors ${
+          className={`flex h-14 min-h-[44px] w-full min-w-0 flex-col items-center justify-center gap-1 overflow-hidden transition-colors ${
             activeTab === id ? 'text-primary' : 'text-on-surface-variant'
           }`}
           aria-current={activeTab === id}
         >
           <Icon className="w-5 h-5" />
-          <span className="text-[11px] font-semibold">{label}</span>
+          <span className="max-w-full truncate text-[11px] font-semibold">{label}</span>
         </button>
       ))}
     </nav>

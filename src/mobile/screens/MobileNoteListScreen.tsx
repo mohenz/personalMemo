@@ -40,17 +40,17 @@ export default function MobileNoteListScreen({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
-      <header className="flex items-center gap-2 h-14 px-4 border-b border-grid-line bg-background shrink-0">
+    <div className="relative flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden">
+      <header className="flex h-14 min-w-0 shrink-0 items-center gap-2 overflow-hidden border-b border-grid-line bg-background px-4">
         {searchOpen ? (
-          <div className="flex-1 flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <input
               autoFocus
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="메모 검색"
-              className="flex-1 h-11 px-3 rounded-lg border border-outline-variant bg-surface text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-11 min-w-0 flex-1 rounded-lg border border-outline-variant bg-surface px-3 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
               type="button"
@@ -72,7 +72,7 @@ export default function MobileNoteListScreen({
             >
               <img src={profileImage} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </button>
-            <h1 className="flex-1 text-lg font-bold text-primary truncate">MEMOry</h1>
+            <h1 className="min-w-0 flex-1 truncate text-lg font-bold text-primary">MEMOry</h1>
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
@@ -85,21 +85,21 @@ export default function MobileNoteListScreen({
         )}
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pb-20">
+      <div className="custom-scrollbar min-h-0 min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto pb-20">
         {visibleNotes.length === 0 ? (
           <MobileEmptyState message={query.trim() ? '검색 결과가 없습니다' : '메모가 없습니다'} />
         ) : (
-          <ul>
+          <ul className="min-w-0 w-full max-w-full overflow-hidden">
             {visibleNotes.map((note) => (
-              <li key={note.id} className="border-b border-grid-line last:border-b-0">
+              <li key={note.id} className="min-w-0 w-full max-w-full overflow-hidden border-b border-grid-line last:border-b-0">
                 <button
                   type="button"
                   onClick={() => onSelectNote(note.id)}
-                  className="w-full min-h-[64px] px-4 py-3 flex flex-col gap-1 text-left active:bg-surface-container transition-colors"
+                  className="flex min-h-[64px] min-w-0 w-full max-w-full flex-col gap-1 overflow-hidden px-4 py-3 text-left transition-colors active:bg-surface-container"
                 >
-                  <span className="text-sm font-bold text-on-surface truncate">{note.title}</span>
-                  <span className="text-xs text-on-surface-variant line-clamp-2">{note.content}</span>
-                  <span className="text-[11px] text-outline">{note.updatedAt}</span>
+                  <span className="block w-full min-w-0 truncate text-sm font-bold text-on-surface">{note.title}</span>
+                  <span className="block w-full min-w-0 line-clamp-2 break-words text-xs text-on-surface-variant">{note.content}</span>
+                  <span className="block w-full min-w-0 truncate text-[11px] text-outline">{note.updatedAt}</span>
                 </button>
               </li>
             ))}
@@ -111,10 +111,11 @@ export default function MobileNoteListScreen({
       <button
         type="button"
         onClick={onAddNote}
-        className="absolute bottom-4 right-4 z-20 w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
+        className="absolute bottom-4 right-4 z-20 flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-bold text-white shadow-2xl transition-transform active:scale-95"
         aria-label="새 메모 작성"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="h-5 w-5" />
+        <span>새 메모</span>
       </button>
     </div>
   );

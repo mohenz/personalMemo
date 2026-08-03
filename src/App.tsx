@@ -838,9 +838,9 @@ export default function App() {
         </div>
 
         {/* Mobile layout (below 768px) */}
-        <div className="flex md:hidden viewport-height w-full overflow-hidden bg-background">
+        <div className="flex md:hidden viewport-height min-w-0 w-full max-w-full overflow-hidden bg-background">
           {/* Kept mounted (hidden via CSS, not unmounted) so tab/detail state survives a round trip to EDITOR */}
-          <div className={screen === 'DASHBOARD' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
+          <div className={screen === 'DASHBOARD' ? 'flex-1 flex flex-col min-h-0 min-w-0 max-w-full overflow-hidden' : 'hidden'}>
             <MobileAppShell
               notes={notes}
               groups={groups}
