@@ -36,9 +36,10 @@ describe('MobileNoteListScreen', () => {
     expect(markup).toContain('회의 아이디어');
     expect(markup).toContain('본문 미리보기 내용');
     expect(markup).toContain('새 메모 작성');
-    expect(markup).toContain('flex-1 flex flex-col min-h-0 relative overflow-hidden');
-    expect(markup).toContain('overflow-y-auto custom-scrollbar pb-20');
+    expect(markup).toContain('min-h-0 min-w-0 w-full max-w-full flex-1');
+    expect(markup).toContain('overflow-x-hidden overflow-y-auto pb-20');
     expect(markup).toContain('absolute bottom-4 right-4 z-20');
+    expect(markup).toContain('>새 메모<');
   });
 
   it('shows the empty-list message when there are no active notes', () => {
@@ -126,6 +127,8 @@ describe('MobileAppShell', () => {
     expect(markup).toContain('메모');
     expect(markup).toContain('캘린더');
     expect(markup).toContain('파일');
-    expect(markup).toContain('relative z-30 flex items-stretch');
+    expect(markup).toContain('휴지통');
+    expect(markup).toContain('grid-cols-4');
+    expect(markup).toContain('min-w-0 max-w-full');
   });
 });
