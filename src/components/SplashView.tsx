@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { FileText } from 'lucide-react';
 
 interface SplashViewProps {
   onComplete: () => void;
@@ -25,25 +24,13 @@ export default function SplashView({ onComplete }: SplashViewProps) {
       />
       
       {/* Center Branding Content */}
-      <div className="relative z-10 flex flex-col items-center animate-fade-in-scale">
-        {/* Minimalist Notebook Icon Logo */}
-        <div className="relative w-24 h-24 mb-8 group cursor-pointer">
-          {/* Outer Canvas / Notebook Cover */}
-          <div className="absolute inset-0 bg-primary rounded-xl notebook-shadow transform rotate-[-2deg] transition-transform group-hover:rotate-[-6deg]" />
-          <div className="absolute inset-0 bg-white border border-outline-variant rounded-xl flex items-center justify-center transform transition-transform group-hover:rotate-[2deg] shadow-sm">
-            <FileText className="text-primary w-12 h-12 stroke-[1.5]" />
-            
-            {/* Tactile Detail: S-Pen Element */}
-            <div className="absolute -right-2 top-4 w-1.5 h-12 bg-primary-fixed-dim rounded-full shadow-sm" />
-          </div>
-        </div>
-        
-        {/* Brand Name */}
-        <h1 className="font-sans text-3xl font-bold text-primary tracking-tight mb-2">
-          MEMOry
-        </h1>
-        <p className="font-sans text-xs text-text-secondary tracking-widest uppercase font-semibold">         
-        </p>
+      <div className="relative z-10 flex w-full items-center justify-center px-4 animate-fade-in-scale">
+        <img
+          src="/MEMOry_logo.webp"
+          alt="MEMOry — 기억을 정리하고, 영감을 연결하다"
+          className="block h-auto w-[min(92vw,720px)] object-contain"
+          fetchPriority="high"
+        />
       </div>
 
       {/* Bottom Loading Section */}
