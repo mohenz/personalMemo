@@ -17,9 +17,12 @@ import {
   Image as ImageIcon,
   Cloud,
   Lock,
-  LogIn
+  LogIn,
+  CalendarDays,
+  RotateCcw,
+  Trash2,
 } from 'lucide-react';
-import { Note, Group, Schedule, ScreenType } from './types';
+import { Note, Group, Schedule, ScreenType, NotificationSettings } from './types';
 import { ScheduleDraft } from './components/calendar/ScheduleFormModal';
 import { PREMIUM_IMAGES } from './data';
 import SplashView from './components/SplashView';
@@ -29,6 +32,7 @@ import NoteEditor from './components/NoteEditor';
 import SearchView from './components/SearchView';
 import CalendarView from './components/CalendarView';
 import SettingsModal from './components/SettingsModal';
+import SchedulePopupModal from './components/SchedulePopupModal';
 import { ArchiveView } from './archiveStore/views/ArchiveView.jsx';
 import MobileAppShell from './mobile/MobileAppShell';
 import MobileNoteEditorScreen from './mobile/screens/MobileNoteEditorScreen';
@@ -46,6 +50,16 @@ import {
 import { isFirebaseConfigured } from './firebase/client';
 import { resolveNoteTitle } from './utils/autoTitle';
 import { toLocalDateString } from './utils/date';
+import { useSchedulePopup } from './hooks/useSchedulePopup';
+import { useNotification } from './hooks/useNotification';
+import {
+  getActiveSchedules,
+  getTrashedSchedules,
+  moveScheduleToTrash,
+  permanentlyDeleteSchedule,
+  restoreNote,
+  restoreSchedule,
+} from './utils/trash';
 
 const LEGACY_SAMPLE_NOTE_IDS = new Set([
   'note-1',
@@ -63,6 +77,12 @@ const LEGACY_SAMPLE_NOTE_IDS = new Set([
 const LEGACY_SAMPLE_GROUP_IDS = new Set(['work', 'personal', 'travel']);
 
 const SPLASH_SESSION_KEY = 'memory_splash_shown';
+
+const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  browserPermission: false,
+  dailyDigest: { enabled: false, time: '08:00' },
+  weeklyDigest: { enabled: false, dayOfWeek: 1, time: '08:00' },
+};
 
 function getInitialScreen(): ScreenType {
   if (typeof window === 'undefined') return 'SPLASH';
@@ -114,6 +134,11 @@ export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
+  const activeSchedules = useMemo(() => getActiveSchedules(schedules), [schedules]);
+  const trashedSchedules = useMemo(() => getTrashedSchedules(schedules), [schedules]);
+  const schedulePopup = useSchedulePopup(activeSchedules, Boolean(archiveUser && cloudReady && screen !== 'SPLASH'));
+  const notifications = useNotification(activeSchedules, notificationSettings, Boolean(archiveUser && cloudReady));
 
   // --- Navigation & Filter Controls ---
   const [activeGroupId, setActiveGroupId] = useState<string>('all');
@@ -147,6 +172,7 @@ export default function App() {
         setNotes(nextNotes);
         setGroups(nextGroups);
         setSchedules(nextSchedules);
+        setNotificationSettings(cloudState?.notificationSettings || DEFAULT_NOTIFICATION_SETTINGS);
         setProfileImage(typeof cloudState?.profileImage === 'string' ? cloudState.profileImage : PREMIUM_IMAGES.userProfile);
         setDarkMode(typeof cloudState?.darkMode === 'boolean' ? cloudState.darkMode : false);
         setArchiveStatus('자료실 계정과 동기화되었습니다.');
@@ -164,7 +190,7 @@ export default function App() {
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
 
     saveTimerRef.current = window.setTimeout(() => {
-      saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, schedules, profileImage })
+      saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, schedules, profileImage, notificationSettings })
         .then(() => setArchiveStatus('자료실 백엔드에 저장되었습니다.'))
         .catch((error) => setArchiveStatus(error instanceof Error ? error.message : '자료실 저장에 실패했습니다.'));
     }, 500);
@@ -172,7 +198,7 @@ export default function App() {
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [archiveUser, cloudReady, darkMode, groups, notes, schedules, profileImage]);
+  }, [archiveUser, cloudReady, darkMode, groups, notes, schedules, profileImage, notificationSettings]);
 
   // --- Computed Note Filters for Middle Pane ---
   const filteredDashboardNotes = useMemo(() => {
@@ -211,7 +237,7 @@ export default function App() {
 
   // Active note detail binding
   const selectedNote = useMemo(() => {
-    const found = notes.find(n => n.id === selectedNoteId);
+    const found = filteredDashboardNotes.find(n => n.id === selectedNoteId);
     if (found) return found;
     // Fallback to first filtered note
     return filteredDashboardNotes[0] || null;
@@ -275,6 +301,10 @@ export default function App() {
     }
   };
 
+  const handleRestoreNote = (noteId: string) => {
+    setNotes(prev => restoreNote(prev, noteId));
+  };
+
   // --- Schedule CRUD handlers (mirrors the note handlers above) ---
   const formatTimestamp = () =>
     new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -300,6 +330,8 @@ export default function App() {
               : {}),
           }
         : undefined,
+      reminder: draft.reminder ? { ...draft.reminder } : undefined,
+      isDeleted: false,
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -327,6 +359,7 @@ export default function App() {
                     : {}),
                 }
               : undefined,
+            reminder: draft.reminder ? { ...draft.reminder } : undefined,
             updatedAt: formatTimestamp(),
           }
         : schedule
@@ -334,7 +367,16 @@ export default function App() {
   };
 
   const handleDeleteSchedule = (scheduleId: string) => {
-    setSchedules(prev => prev.filter(schedule => schedule.id !== scheduleId));
+    setSchedules(prev => moveScheduleToTrash(prev, scheduleId, formatTimestamp()));
+  };
+
+  const handleRestoreSchedule = (scheduleId: string) => {
+    setSchedules(prev => restoreSchedule(prev, scheduleId, formatTimestamp()));
+  };
+
+  const handlePermanentlyDeleteSchedule = (scheduleId: string) => {
+    if (!confirm('이 일정을 영구 삭제하시겠습니까?')) return;
+    setSchedules(prev => permanentlyDeleteSchedule(prev, scheduleId));
   };
 
   const handleStartAddNote = (withDate?: string) => {
@@ -573,7 +615,7 @@ export default function App() {
       {screen === 'CALENDAR' && (
         <CalendarView
           notes={notes}
-          schedules={schedules}
+          schedules={activeSchedules}
           groups={groups}
           onSelectNote={(id) => {
             setSelectedNoteId(id);
@@ -692,7 +734,27 @@ export default function App() {
 
                     {/* Scrollable Cards list */}
                     <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar px-4 space-y-3 pb-24">
-                      {filteredDashboardNotes.length === 0 ? (
+                      {activeGroupId === 'trash' && trashedSchedules.map((schedule) => (
+                        <div key={schedule.id} className="p-4 rounded-xl shadow-soft border border-outline-variant/30 bg-surface-container-lowest flex flex-col gap-3">
+                          <div className="flex items-start gap-3">
+                            <CalendarDays className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] font-bold text-primary uppercase tracking-wider">일정</p>
+                              <h3 className="font-sans text-sm font-bold text-on-surface truncate">{schedule.title}</h3>
+                              <p className="text-xs text-text-secondary mt-1">{schedule.dateString}{!schedule.allDay && schedule.startTime ? ` · ${schedule.startTime}` : ' · 종일'}</p>
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <button type="button" onClick={() => handleRestoreSchedule(schedule.id)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-white transition-colors">
+                              <RotateCcw className="w-3.5 h-3.5" /> 복원
+                            </button>
+                            <button type="button" onClick={() => handlePermanentlyDeleteSchedule(schedule.id)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-error/10 text-error text-xs font-bold hover:bg-error hover:text-white transition-colors">
+                              <Trash2 className="w-3.5 h-3.5" /> 영구 삭제
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {filteredDashboardNotes.length === 0 && (activeGroupId !== 'trash' || trashedSchedules.length === 0) ? (
                         <div className="text-center py-20 opacity-40 select-none">
                           <FileText className="w-10 h-10 text-outline mx-auto mb-2 stroke-[1.25]" />
                           <p className="text-xs font-semibold text-on-surface-variant">표시할 메모가 없습니다</p>
@@ -752,6 +814,7 @@ export default function App() {
                     groups={groups}
                     onEdit={() => selectedNote && handleStartEditNote(selectedNote)}
                     onDelete={handleDeleteNote}
+                    onRestore={handleRestoreNote}
                     onToggleFavorite={handleToggleFavorite}
                     onToggleChecklistItem={handleToggleChecklistItem}
                   />
@@ -781,7 +844,7 @@ export default function App() {
             <MobileAppShell
               notes={notes}
               groups={groups}
-              schedules={schedules}
+              schedules={activeSchedules}
               selectedNote={selectedNote}
               onSelectNote={setSelectedNoteId}
               onAddNote={() => handleStartAddNote()}
@@ -789,6 +852,13 @@ export default function App() {
               onAddSchedule={handleAddSchedule}
               onUpdateSchedule={handleUpdateSchedule}
               onDeleteSchedule={handleDeleteSchedule}
+              trashedSchedules={trashedSchedules}
+              onRestoreNote={handleRestoreNote}
+              onPermanentlyDeleteNote={handleDeleteNote}
+              onRestoreSchedule={handleRestoreSchedule}
+              onPermanentlyDeleteSchedule={(scheduleId) => {
+                setSchedules(prev => permanentlyDeleteSchedule(prev, scheduleId));
+              }}
               userId={archiveUser.uid}
               profileImage={profileImage}
               onOpenSettings={() => setShowSettingsModal(true)}
@@ -830,7 +900,7 @@ export default function App() {
             if (!archiveUser) throw new Error('로그인 후 프로필 이미지를 저장할 수 있습니다.');
             const imageUrl = await uploadMemoProfileImage(archiveUser.uid, file);
             setProfileImage(imageUrl);
-            await saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, schedules, profileImage: imageUrl });
+            await saveMemoCloudState(archiveUser.uid, { darkMode, groups, notes, schedules, profileImage: imageUrl, notificationSettings });
             setArchiveStatus('프로필 이미지가 자료실 Storage에 저장되었습니다.');
           }}
           darkMode={darkMode}
@@ -839,6 +909,10 @@ export default function App() {
           onRenameGroup={handleRenameFolder}
           archiveUserEmail={archiveUser?.email || ''}
           archiveStatus={archiveStatus}
+          notificationSettings={notificationSettings}
+          onNotificationSettingsChange={setNotificationSettings}
+          onRequestNotificationPermission={notifications.requestPermission}
+          notificationsSupported={notifications.supported}
           firebaseConfigured={isFirebaseConfigured}
           onArchiveLogin={async (email, password) => {
             setArchiveStatus('자료실 계정에 로그인하는 중입니다.');
@@ -860,6 +934,10 @@ export default function App() {
           isInstallable={!!deferredPrompt}
           onInstall={handleInstallApp}
         />
+      )}
+
+      {schedulePopup.open && (
+        <SchedulePopupModal data={schedulePopup.data} onClose={schedulePopup.close} />
       )}
     </div>
   );

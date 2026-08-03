@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { X, Sun, Moon, Check, User, Sparkles, Upload, Download, Smartphone, Cloud, LogOut, Folder } from 'lucide-react';
-import { Group } from '../types';
+import { X, Sun, Moon, Check, User, Sparkles, Upload, Download, Smartphone, Cloud, LogOut, Folder, Bell } from 'lucide-react';
+import { Group, NotificationSettings } from '../types';
+
+const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  browserPermission: false,
+  dailyDigest: { enabled: false, time: '08:00' },
+  weeklyDigest: { enabled: false, dayOfWeek: 1, time: '08:00' },
+};
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -16,6 +22,10 @@ interface SettingsModalProps {
   onArchiveLogin: (email: string, password: string) => Promise<void>;
   onArchiveLogout: () => Promise<void>;
   onArchivePasswordReset: (email: string) => Promise<void>;
+  notificationSettings?: NotificationSettings;
+  onNotificationSettingsChange?: (settings: NotificationSettings) => void;
+  onRequestNotificationPermission?: () => Promise<boolean>;
+  notificationsSupported?: boolean;
   isInstallable?: boolean;
   onInstall?: () => void;
 }
@@ -75,13 +85,18 @@ export default function SettingsModal({
   onArchiveLogout,
   onArchivePasswordReset,
   isInstallable,
-  onInstall
+  onInstall,
+  notificationSettings = DEFAULT_NOTIFICATION_SETTINGS,
+  onNotificationSettingsChange = () => undefined,
+  onRequestNotificationPermission = async () => false,
+  notificationsSupported = true,
 }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'archive' | 'theme' | 'folders'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'archive' | 'theme' | 'folders' | 'notifications'>('profile');
   const [dragOver, setDragOver] = useState(false);
   const [archiveEmail, setArchiveEmail] = useState('');
   const [archivePassword, setArchivePassword] = useState('');
   const [profileStatus, setProfileStatus] = useState('');
+  const [notificationStatus, setNotificationStatus] = useState('');
 
   const handleFileChange = async (file: File | undefined) => {
     if (!file) return;
@@ -163,6 +178,19 @@ export default function SettingsModal({
           >
             <Folder className="w-4 h-4" />
             <span className="hidden md:inline">폴더 이름 관리</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            title="알림 설정"
+            aria-label="알림 설정"
+            className={`py-3.5 px-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
+              activeTab === 'notifications'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            <span className="hidden md:inline">알림</span>
           </button>
           <button
             onClick={() => setActiveTab('archive')}
@@ -370,6 +398,75 @@ export default function SettingsModal({
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="space-y-5">
+              <div className="rounded-2xl border border-outline-variant/30 bg-surface p-4 text-xs leading-relaxed text-on-surface-variant dark:bg-surface-container-lowest">
+                <span className="mb-1 block font-bold text-primary">브라우저 알림</span>
+                앱이 열려 있는 동안 일정 리마인드와 다이제스트를 표시합니다.
+              </div>
+
+              <label className="flex items-center justify-between gap-4 rounded-2xl border border-outline-variant/30 bg-surface p-4 dark:bg-surface-container-lowest">
+                <div><strong className="block text-sm text-on-surface">브라우저 알림 허용</strong><span className="text-[11px] text-outline">처음 활성화할 때 브라우저 권한을 요청합니다.</span></div>
+                <input
+                  type="checkbox"
+                  aria-label="브라우저 알림 허용"
+                  checked={notificationSettings.browserPermission}
+                  disabled={!notificationsSupported}
+                  onChange={async (event) => {
+                    if (!event.target.checked) {
+                      onNotificationSettingsChange({ ...notificationSettings, browserPermission: false });
+                      setNotificationStatus('MEMOry 알림이 꺼졌습니다.');
+                      return;
+                    }
+                    const granted = await onRequestNotificationPermission();
+                    onNotificationSettingsChange({ ...notificationSettings, browserPermission: granted });
+                    setNotificationStatus(granted ? '브라우저 알림을 허용했습니다.' : '브라우저 알림 권한이 허용되지 않았습니다.');
+                  }}
+                  className="h-5 w-5 accent-primary"
+                />
+              </label>
+              {!notificationsSupported && <p className="text-xs font-semibold text-error">이 브라우저는 알림 기능을 지원하지 않습니다.</p>}
+              {notificationStatus && <p className="text-xs font-semibold text-primary">{notificationStatus}</p>}
+
+              <div className="space-y-3 rounded-2xl border border-outline-variant/30 bg-surface p-4 dark:bg-surface-container-lowest">
+                <label className="flex items-center justify-between gap-4 text-sm font-bold text-on-surface">
+                  매일 다이제스트
+                  <input
+                    type="checkbox"
+                    checked={notificationSettings.dailyDigest.enabled}
+                    onChange={(event) => onNotificationSettingsChange({ ...notificationSettings, dailyDigest: { ...notificationSettings.dailyDigest, enabled: event.target.checked } })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-on-surface-variant">알림 시간
+                  <input type="time" aria-label="매일 다이제스트 시간" value={notificationSettings.dailyDigest.time} onChange={(event) => onNotificationSettingsChange({ ...notificationSettings, dailyDigest: { ...notificationSettings.dailyDigest, time: event.target.value } })} className="mt-1 h-10 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-sm text-on-surface" />
+                </label>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-outline-variant/30 bg-surface p-4 dark:bg-surface-container-lowest">
+                <label className="flex items-center justify-between gap-4 text-sm font-bold text-on-surface">
+                  매주 다이제스트
+                  <input
+                    type="checkbox"
+                    checked={notificationSettings.weeklyDigest.enabled}
+                    onChange={(event) => onNotificationSettingsChange({ ...notificationSettings, weeklyDigest: { ...notificationSettings.weeklyDigest, enabled: event.target.checked } })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="text-xs font-bold text-on-surface-variant">요일
+                    <select aria-label="매주 다이제스트 요일" value={notificationSettings.weeklyDigest.dayOfWeek} onChange={(event) => onNotificationSettingsChange({ ...notificationSettings, weeklyDigest: { ...notificationSettings.weeklyDigest, dayOfWeek: Number(event.target.value) } })} className="mt-1 h-10 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-sm text-on-surface">
+                      <option value={0}>일요일</option><option value={1}>월요일</option><option value={2}>화요일</option><option value={3}>수요일</option><option value={4}>목요일</option><option value={5}>금요일</option><option value={6}>토요일</option>
+                    </select>
+                  </label>
+                  <label className="text-xs font-bold text-on-surface-variant">알림 시간
+                    <input type="time" aria-label="매주 다이제스트 시간" value={notificationSettings.weeklyDigest.time} onChange={(event) => onNotificationSettingsChange({ ...notificationSettings, weeklyDigest: { ...notificationSettings.weeklyDigest, time: event.target.value } })} className="mt-1 h-10 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-sm text-on-surface" />
+                  </label>
+                </div>
+              </div>
             </div>
           )}
 

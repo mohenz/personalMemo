@@ -14,7 +14,8 @@ import {
   Square,
   FolderOpen,
   X,
-  Download
+  Download,
+  RotateCcw,
 } from 'lucide-react';
 import { Note, Group } from '../types';
 import { downloadMarkdownFile } from '../utils/markdownExport';
@@ -24,6 +25,7 @@ interface NoteDetailProps {
   groups: Group[];
   onEdit: () => void;
   onDelete: (id: string) => void;
+  onRestore: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onToggleChecklistItem: (noteId: string, itemId: string) => void;
 }
@@ -33,6 +35,7 @@ export default function NoteDetail({
   groups,
   onEdit,
   onDelete,
+  onRestore,
   onToggleFavorite,
   onToggleChecklistItem
 }: NoteDetailProps) {
@@ -81,29 +84,42 @@ export default function NoteDetail({
       
       {/* Top Header Controls / Writing Tools Overlay */}
       <div className="absolute top-4 right-4 md:right-8 flex items-center gap-2 z-20">
-        <button 
-          onClick={() => onToggleFavorite(note.id)}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-            note.isFavorite 
-              ? 'bg-yellow-50 text-yellow-500 shadow-sm' 
-              : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
-          }`}
-          title={note.isFavorite ? "중요 메모 해제" : "중요 메모 추가"}
-        >
-          <Star className={`w-5 h-5 ${note.isFavorite ? 'fill-current' : ''}`} />
-        </button>
+        {note.isDeleted ? (
+          <button
+            onClick={() => onRestore(note.id)}
+            className="h-10 px-4 rounded-full bg-primary text-white flex items-center gap-2 hover:brightness-110 transition-all shadow-sm font-semibold text-sm"
+            title="메모 복원"
+          >
+            <RotateCcw className="w-4 h-4" />
+            복원
+          </button>
+        ) : (
+          <>
+            <button 
+              onClick={() => onToggleFavorite(note.id)}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                note.isFavorite 
+                  ? 'bg-yellow-50 text-yellow-500 shadow-sm' 
+                  : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+              }`}
+              title={note.isFavorite ? "중요 메모 해제" : "중요 메모 추가"}
+            >
+              <Star className={`w-5 h-5 ${note.isFavorite ? 'fill-current' : ''}`} />
+            </button>
 
-        <button 
-          onClick={onEdit}
-          className="w-10 h-10 rounded-full bg-surface-container-high text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm"
-          title="수정하기"
-        >
-          <Edit className="w-5 h-5" />
-        </button>
+            <button 
+              onClick={onEdit}
+              className="w-10 h-10 rounded-full bg-surface-container-high text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm"
+              title="수정하기"
+            >
+              <Edit className="w-5 h-5" />
+            </button>
+          </>
+        )}
 
         <button 
           onClick={() => {
-            if (confirm("이 메모를 정말 삭제하시겠습니까?")) {
+            if (confirm(note.isDeleted ? "이 메모를 영구 삭제하시겠습니까?" : "이 메모를 휴지통으로 이동하시겠습니까?")) {
               onDelete(note.id);
             }
           }}
@@ -115,7 +131,7 @@ export default function NoteDetail({
       </div>
 
       {/* Main Reading/Lined Canvas */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-12 pb-32 notebook-pattern select-text">
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-5 md:p-12 notebook-pattern select-text">
         <div className="max-w-6xl mx-auto space-y-8 pt-12 md:pt-0">
           
           {/* Metadata & Title Block */}
@@ -207,75 +223,76 @@ export default function NoteDetail({
         </div>
       </div>
 
-      {/* Floating Toolbar at the bottom of the reading section */}
-      <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 bg-slate-950/95 text-slate-50 border border-white/10 px-4 md:px-6 py-3 rounded-xl flex items-center gap-4 md:gap-6 shadow-2xl backdrop-blur-md z-20">
-        <button 
-          onClick={() => {
-            setShowFormatToast(true);
-            setTimeout(() => setShowFormatToast(false), 2000);
-          }}
-          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
-        >
-          <Type className="w-5 h-5" />
-          <span className="text-[10px] font-bold">서식</span>
-        </button>
+      {/* Bottom Toolbar Bar (own layout row, never overlaps the scroll area) */}
+      <div className="relative shrink-0 flex justify-center px-4 py-3 md:py-4 bg-background/80 backdrop-blur-sm border-t border-outline-variant/50" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
+        {showShareToast && (
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-4 py-2 rounded-full shadow-lg font-semibold animate-fade-in-scale z-30 whitespace-nowrap">
+            공유 링크가 클립보드에 복사되었습니다.
+          </div>
+        )}
 
-        <button 
-          onClick={onEdit}
-          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
-        >
-          <ImageIcon className="w-5 h-5" />
-          <span className="text-[10px] font-bold">사진</span>
-        </button>
+        {showFormatToast && (
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-4 py-2 rounded-full shadow-lg font-semibold animate-fade-in-scale z-30 whitespace-nowrap">
+            서식 도구: Manrope 폰트가 적용되었습니다.
+          </div>
+        )}
 
-        <button 
-          onClick={handleDrawing}
-          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
-        >
-          <Paintbrush className="w-5 h-5" />
-          <span className="text-[10px] font-bold">그리기</span>
-        </button>
+        <div className="bg-slate-950/95 text-slate-50 border border-white/10 px-4 md:px-6 py-3 rounded-xl flex items-center gap-4 md:gap-6 shadow-2xl backdrop-blur-md z-20">
+          {!note.isDeleted && <button
+            onClick={() => {
+              setShowFormatToast(true);
+              setTimeout(() => setShowFormatToast(false), 2000);
+            }}
+            className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          >
+            <Type className="w-5 h-5" />
+            <span className="text-[10px] font-bold">서식</span>
+          </button>}
 
-        <button 
-          onClick={handleVoice}
-          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
-        >
-          <Mic className="w-5 h-5" />
-          <span className="text-[10px] font-bold">음성</span>
-        </button>
+          {!note.isDeleted && <button
+            onClick={onEdit}
+            className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          >
+            <ImageIcon className="w-5 h-5" />
+            <span className="text-[10px] font-bold">사진</span>
+          </button>}
 
-        <div className="w-[1px] h-6 bg-white/20" />
+          <button
+            onClick={handleDrawing}
+            className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          >
+            <Paintbrush className="w-5 h-5" />
+            <span className="text-[10px] font-bold">그리기</span>
+          </button>
 
-        <button 
-          onClick={handleMarkdownDownload}
-          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
-          title="Markdown 다운로드"
-        >
-          <Download className="w-5 h-5" />
-          <span className="text-[10px] font-bold">다운로드</span>
-        </button>
+          <button
+            onClick={handleVoice}
+            className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          >
+            <Mic className="w-5 h-5" />
+            <span className="text-[10px] font-bold">음성</span>
+          </button>
 
-        <button 
-          onClick={handleShare}
-          className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
-        >
-          <Share2 className="w-5 h-5" />
-          <span className="text-[10px] font-bold">공유</span>
-        </button>
+          <div className="w-[1px] h-6 bg-white/20" />
+
+          <button
+            onClick={handleMarkdownDownload}
+            className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
+            title="Markdown 다운로드"
+          >
+            <Download className="w-5 h-5" />
+            <span className="text-[10px] font-bold">다운로드</span>
+          </button>
+
+          <button
+            onClick={handleShare}
+            className="flex flex-col items-center gap-1 text-slate-50 hover:text-primary-fixed-dim transition-colors cursor-pointer"
+          >
+            <Share2 className="w-5 h-5" />
+            <span className="text-[10px] font-bold">공유</span>
+          </button>
+        </div>
       </div>
-
-      {/* Temporary Interactivity Toasts */}
-      {showShareToast && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-4 py-2 rounded-full shadow-lg font-semibold animate-fade-in-scale z-30">
-          공유 링크가 클립보드에 복사되었습니다.
-        </div>
-      )}
-
-      {showFormatToast && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-4 py-2 rounded-full shadow-lg font-semibold animate-fade-in-scale z-30">
-          서식 도구: Manrope 폰트가 적용되었습니다.
-        </div>
-      )}
 
       {selectedImage && (
         <div
