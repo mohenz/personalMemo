@@ -56,17 +56,24 @@ export async function uploadArchiveFile({ file, userId, onProgress }) {
 
   const downloadUrl = await getDownloadURL(storageRef);
 
-  await addDoc(collection(db, 'users', userId, 'files'), {
-    filename: file.name,
-    mimeType: file.type || 'application/octet-stream',
-    size: file.size,
-    storagePath,
-    downloadUrl,
-    category: getFileCategory(file),
-    tags: [],
-    uploadedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+  try {
+    await addDoc(collection(db, 'users', userId, 'files'), {
+      filename: file.name,
+      mimeType: file.type || 'application/octet-stream',
+      size: file.size,
+      storagePath,
+      downloadUrl,
+      category: getFileCategory(file),
+      tags: [],
+      uploadedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    // Firestore write failed after Storage upload succeeded — clean up the
+    // orphaned object so it doesn't silently consume quota with no UI record.
+    try { await deleteObject(storageRef); } catch { /* ignore cleanup failure */ }
+    throw error;
+  }
 }
 
 export async function deleteArchiveFile({ file, userId }) {

@@ -28,7 +28,7 @@ export function calcNextReminderTime(schedule: Schedule, now: Date): Date | null
   }
 
   const allowedWeekdays = reminder.frequency === 'weekly' ? reminderWeekdays(schedule) : null;
-  for (let offset = 0; offset <= 14; offset += 1) {
+  for (let offset = 0; offset <= 365; offset += 1) {
     const eventDate = addLocalDays(now, offset);
     const dateString = toLocalDateString(eventDate);
     if (dateString < schedule.dateString) continue;

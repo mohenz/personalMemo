@@ -28,7 +28,7 @@ export default function SearchView({
   onSelectNote,
   onAddNote
 }: SearchViewProps) {
-  const [query, setQuery] = useState('아이디어');
+  const [query, setQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<{
     group: string; // "all" or specific
     hasImageOnly: boolean;
@@ -72,10 +72,8 @@ export default function SearchView({
         return note.isFavorite;
       })
       .sort((a, b) => {
-        // Sort order
-        const timeA = new Date(a.dateString).getTime() || 0;
-        const timeB = new Date(b.dateString).getTime() || 0;
-        return activeFilters.sortDesc ? timeB - timeA : timeA - timeB;
+        const cmp = b.dateString.localeCompare(a.dateString);
+        return activeFilters.sortDesc ? cmp : -cmp;
       });
   }, [notes, query, activeFilters]);
 

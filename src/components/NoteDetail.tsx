@@ -59,10 +59,17 @@ export default function NoteDetail({
 
   const groupName = groups.find(g => g.id === note.groupId)?.name || '개인';
 
-  const handleShare = () => {
-    // Mimic share behavior
-    const shareUrl = `${window.location.origin}/notes/${note.id}`;
-    navigator.clipboard?.writeText(shareUrl);
+  const handleShare = async () => {
+    const text = `${note.title}\n\n${note.content}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: note.title, text });
+        return;
+      } catch {
+        // user dismissed or browser blocked — fall through to clipboard
+      }
+    }
+    navigator.clipboard?.writeText(text);
     setShowShareToast(true);
     setTimeout(() => setShowShareToast(false), 2000);
   };
@@ -227,7 +234,7 @@ export default function NoteDetail({
       <div className="relative shrink-0 flex justify-center px-4 py-3 md:py-4 bg-background/80 backdrop-blur-sm border-t border-outline-variant/50" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         {showShareToast && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary text-white text-xs px-4 py-2 rounded-full shadow-lg font-semibold animate-fade-in-scale z-30 whitespace-nowrap">
-            공유 링크가 클립보드에 복사되었습니다.
+            메모 내용이 클립보드에 복사되었습니다.
           </div>
         )}
 

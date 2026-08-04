@@ -94,10 +94,10 @@ export function useArchiveAuth({ dataBackend }) {
   async function handleLogout() {
     sessionStorage.removeItem(unlockSessionKey);
     setIsUnlocked(false);
-    setAuthUser(null);
     if (auth) {
       await signOut(auth);
     }
+    setAuthUser(null);
   }
 
   function handleUnlock(event) {

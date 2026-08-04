@@ -45,7 +45,7 @@ export function getPopupData(schedules: Schedule[], today: Date): PopupScheduleD
   ));
 
   return {
-    reminders: sortOccurrences(byDate.flat().filter((schedule) => Boolean(schedule.recurrence))),
+    reminders: sortOccurrences(byDate.flat().filter((schedule) => Boolean(schedule.reminder?.enabled))),
     today: byDate[0],
     tomorrow: byDate[1],
     dayAfter: byDate[2],
