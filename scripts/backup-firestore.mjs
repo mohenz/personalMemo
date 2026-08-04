@@ -1,94 +1,106 @@
 /**
- * Firestore 백업 스크립트
+ * Firestore 백업 스크립트 (REST API 방식 — 서비스 계정 불필요)
  *
- * 실행 전 준비:
- *   Firebase Console → 프로젝트 설정 → 서비스 계정 → 새 비공개 키 생성
- *   → 다운로드한 JSON을 프로젝트 루트에 service-account.json 으로 저장
+ * 준비: .env.local 에 아래 두 줄 추가
+ *   FIREBASE_BACKUP_EMAIL=your@email.com
+ *   FIREBASE_BACKUP_PASSWORD=yourpassword
  *
  * 사용:
- *   node scripts/backup-firestore.mjs
+ *   npm run backup
  *
  * 출력:
  *   backups/personalMemo-YYYY-MM-DDTHH-MM-SS-{gitHash}.json
  */
 
-import { cert, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { config } from 'dotenv';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const serviceAccountPath = path.join(root, 'service-account.json');
+config({ path: path.join(root, '.env.local') });
 
-if (!fs.existsSync(serviceAccountPath)) {
-  console.error([
-    '❌  service-account.json 이 없습니다.',
-    '',
-    '준비 방법:',
-    '  1. https://console.firebase.google.com/project/archive-store-v2-3d020/settings/serviceaccounts/adminsdk',
-    '  2. "새 비공개 키 생성" 클릭 → JSON 다운로드',
-    '  3. 파일명을 service-account.json 으로 바꿔 프로젝트 루트에 저장',
-  ].join('\n'));
-  process.exit(1);
+const API_KEY = process.env.VITE_FIREBASE_API_KEY;
+const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID;
+const EMAIL = process.env.FIREBASE_BACKUP_EMAIL?.trim();
+const PASSWORD = process.env.FIREBASE_BACKUP_PASSWORD?.trim();
+
+if (!EMAIL || !PASSWORD) {
+  console.warn('⚠️  백업 건너뜀: .env.local 에 FIREBASE_BACKUP_EMAIL / FIREBASE_BACKUP_PASSWORD 를 추가하세요.');
+  process.exit(0);
 }
 
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-initializeApp({ credential: cert(serviceAccount) });
-const db = getFirestore();
+// 1. 이메일/비밀번호로 Firebase Auth 로그인 → ID 토큰 발급
+const signInRes = await fetch(
+  `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: EMAIL, password: PASSWORD, returnSecureToken: true }),
+  },
+);
 
+if (!signInRes.ok) {
+  const body = await signInRes.text();
+  console.warn(`⚠️  백업 건너뜀: Firebase 로그인 실패 (${signInRes.status})`);
+  console.warn('   원인:', body);
+  process.exit(0);
+}
+
+const { idToken, localId: uid } = await signInRes.json();
+
+// 2. Firestore REST API 로 문서 읽기
+const docUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${uid}/apps/personalMemo`;
+const docRes = await fetch(docUrl, { headers: { Authorization: `Bearer ${idToken}` } });
+
+if (!docRes.ok) {
+  console.warn(`⚠️  백업 건너뜀: Firestore 읽기 실패 (${docRes.status})`);
+  process.exit(0);
+}
+
+const firestoreDoc = await docRes.json();
+
+// 3. Firestore REST 포맷 → 일반 JSON 변환
+function fromValue(v) {
+  if ('stringValue' in v) return v.stringValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('doubleValue' in v) return v.doubleValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('nullValue' in v) return null;
+  if ('timestampValue' in v) return v.timestampValue;
+  if ('arrayValue' in v) return (v.arrayValue.values ?? []).map(fromValue);
+  if ('mapValue' in v) return fromFields(v.mapValue.fields ?? {});
+  return null;
+}
+
+function fromFields(fields) {
+  return Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, fromValue(v)]));
+}
+
+const data = fromFields(firestoreDoc.fields ?? {});
+
+// 4. 백업 파일 저장
 let gitHash = 'unknown';
 try {
   gitHash = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-} catch {
-  // git 없으면 그냥 진행
-}
+} catch { /* git 없으면 그냥 진행 */ }
 
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const backupDir = path.join(root, 'backups');
 fs.mkdirSync(backupDir, { recursive: true });
 
-try {
-  const usersSnapshot = await db.collection('users').get();
+const noteCount = Array.isArray(data.notes) ? data.notes.length : 0;
+const scheduleCount = Array.isArray(data.schedules) ? data.schedules.length : 0;
+console.log(`  uid=${uid.slice(0, 8)}…  메모 ${noteCount}개  일정 ${scheduleCount}개`);
 
-  const backup = {
-    _meta: {
-      createdAt: new Date().toISOString(),
-      gitHash,
-      project: serviceAccount.project_id,
-      userCount: 0,
-    },
-  };
+const backup = {
+  _meta: { createdAt: new Date().toISOString(), gitHash, project: PROJECT_ID, uid },
+  [uid]: data,
+};
 
-  for (const userDoc of usersSnapshot.docs) {
-    const uid = userDoc.id;
-    const memoSnap = await db.doc(`users/${uid}/apps/personalMemo`).get();
-    if (!memoSnap.exists) continue;
+const filename = path.join(backupDir, `personalMemo-${timestamp}-${gitHash}.json`);
+fs.writeFileSync(filename, JSON.stringify(backup, null, 2), 'utf8');
 
-    const data = memoSnap.data();
-    backup[uid] = data;
-    backup._meta.userCount += 1;
-
-    const noteCount = Array.isArray(data.notes) ? data.notes.length : 0;
-    const scheduleCount = Array.isArray(data.schedules) ? data.schedules.length : 0;
-    console.log(`  uid=${uid.slice(0, 8)}…  메모 ${noteCount}개  일정 ${scheduleCount}개`);
-  }
-
-  const filename = path.join(backupDir, `personalMemo-${timestamp}-${gitHash}.json`);
-  fs.writeFileSync(filename, JSON.stringify(backup, null, 2), 'utf8');
-
-  console.log(`\n✅  백업 완료: backups/${path.basename(filename)}`);
-  console.log(`   사용자 수: ${backup._meta.userCount}`);
-} catch (error) {
-  const isPermission = error?.code === 7 || String(error).includes('PERMISSION_DENIED');
-  console.warn('\n⚠️  Firestore 백업 실패 — 배포는 계속 진행됩니다.');
-  if (isPermission) {
-    console.warn('   원인: 서비스 계정에 Firestore 권한이 없습니다.');
-    console.warn('   해결: https://console.cloud.google.com/iam-admin/iam?project=' + serviceAccount.project_id);
-    console.warn('   서비스 계정에 "Cloud Datastore 사용자" 역할을 추가하세요.\n');
-  } else {
-    console.warn('   원인:', error?.message || error);
-  }
-  // 배포를 막지 않기 위해 exit code 0으로 종료
-}
+console.log(`\n✅  백업 완료: backups/${path.basename(filename)}`);
+console.log(`   메모 ${noteCount}개  일정 ${scheduleCount}개`);
