@@ -108,6 +108,7 @@ export default function App() {
   const [loginStatus, setLoginStatus] = useState('');
   const [resetMode, setResetMode] = useState(false);
   const [cloudReady, setCloudReady] = useState(false);
+  const [cloudLoaded, setCloudLoaded] = useState(false);
   const saveTimerRef = useRef<number | null>(null);
 
   // Capture PWA installation prompt
@@ -153,6 +154,7 @@ export default function App() {
     return subscribeArchiveAccount(async (user) => {
       setArchiveUser(user ? { uid: user.uid, email: user.email } : null);
       setCloudReady(false);
+      setCloudLoaded(false);
       setAuthLoading(true);
 
       if (!user) {
@@ -176,6 +178,7 @@ export default function App() {
         setProfileImage(typeof cloudState?.profileImage === 'string' ? cloudState.profileImage : PREMIUM_IMAGES.userProfile);
         setDarkMode(typeof cloudState?.darkMode === 'boolean' ? cloudState.darkMode : false);
         setArchiveStatus('자료실 계정과 동기화되었습니다.');
+        setCloudLoaded(true);
       } catch (error) {
         setArchiveStatus(error instanceof Error ? error.message : '자료실 동기화에 실패했습니다.');
       } finally {
@@ -186,7 +189,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!archiveUser || !cloudReady) return;
+    if (!archiveUser || !cloudReady || !cloudLoaded) return;
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
 
     saveTimerRef.current = window.setTimeout(() => {
@@ -198,7 +201,7 @@ export default function App() {
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [archiveUser, cloudReady, darkMode, groups, notes, schedules, profileImage, notificationSettings]);
+  }, [archiveUser, cloudReady, cloudLoaded, darkMode, groups, notes, schedules, profileImage, notificationSettings]);
 
   // --- Computed Note Filters for Middle Pane ---
   const filteredDashboardNotes = useMemo(() => {
