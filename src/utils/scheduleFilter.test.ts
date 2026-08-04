@@ -11,6 +11,7 @@ const schedules: Schedule[] = [
     id: 'weekly', title: '주간 일정', dateString: '2026-07-27', allDay: false,
     startTime: '09:00', endTime: '10:00', priority: 'high', createdAt: '', updatedAt: '',
     recurrence: { frequency: 'weekly', weekdays: ['MO', 'WE'] },
+    reminder: { enabled: true, minutesBefore: 10, frequency: 'weekly' },
   },
 ];
 
