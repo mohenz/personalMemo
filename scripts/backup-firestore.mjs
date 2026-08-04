@@ -49,33 +49,46 @@ const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const backupDir = path.join(root, 'backups');
 fs.mkdirSync(backupDir, { recursive: true });
 
-const usersSnapshot = await db.collection('users').get();
+try {
+  const usersSnapshot = await db.collection('users').get();
 
-const backup = {
-  _meta: {
-    createdAt: new Date().toISOString(),
-    gitHash,
-    project: serviceAccount.project_id,
-    userCount: 0,
-  },
-};
+  const backup = {
+    _meta: {
+      createdAt: new Date().toISOString(),
+      gitHash,
+      project: serviceAccount.project_id,
+      userCount: 0,
+    },
+  };
 
-for (const userDoc of usersSnapshot.docs) {
-  const uid = userDoc.id;
-  const memoSnap = await db.doc(`users/${uid}/apps/personalMemo`).get();
-  if (!memoSnap.exists) continue;
+  for (const userDoc of usersSnapshot.docs) {
+    const uid = userDoc.id;
+    const memoSnap = await db.doc(`users/${uid}/apps/personalMemo`).get();
+    if (!memoSnap.exists) continue;
 
-  const data = memoSnap.data();
-  backup[uid] = data;
-  backup._meta.userCount += 1;
+    const data = memoSnap.data();
+    backup[uid] = data;
+    backup._meta.userCount += 1;
 
-  const noteCount = Array.isArray(data.notes) ? data.notes.length : 0;
-  const scheduleCount = Array.isArray(data.schedules) ? data.schedules.length : 0;
-  console.log(`  uid=${uid.slice(0, 8)}…  메모 ${noteCount}개  일정 ${scheduleCount}개`);
+    const noteCount = Array.isArray(data.notes) ? data.notes.length : 0;
+    const scheduleCount = Array.isArray(data.schedules) ? data.schedules.length : 0;
+    console.log(`  uid=${uid.slice(0, 8)}…  메모 ${noteCount}개  일정 ${scheduleCount}개`);
+  }
+
+  const filename = path.join(backupDir, `personalMemo-${timestamp}-${gitHash}.json`);
+  fs.writeFileSync(filename, JSON.stringify(backup, null, 2), 'utf8');
+
+  console.log(`\n✅  백업 완료: backups/${path.basename(filename)}`);
+  console.log(`   사용자 수: ${backup._meta.userCount}`);
+} catch (error) {
+  const isPermission = error?.code === 7 || String(error).includes('PERMISSION_DENIED');
+  console.warn('\n⚠️  Firestore 백업 실패 — 배포는 계속 진행됩니다.');
+  if (isPermission) {
+    console.warn('   원인: 서비스 계정에 Firestore 권한이 없습니다.');
+    console.warn('   해결: https://console.cloud.google.com/iam-admin/iam?project=' + serviceAccount.project_id);
+    console.warn('   서비스 계정에 "Cloud Datastore 사용자" 역할을 추가하세요.\n');
+  } else {
+    console.warn('   원인:', error?.message || error);
+  }
+  // 배포를 막지 않기 위해 exit code 0으로 종료
 }
-
-const filename = path.join(backupDir, `personalMemo-${timestamp}-${gitHash}.json`);
-fs.writeFileSync(filename, JSON.stringify(backup, null, 2), 'utf8');
-
-console.log(`\n✅  백업 완료: backups/${path.basename(filename)}`);
-console.log(`   사용자 수: ${backup._meta.userCount}`);
