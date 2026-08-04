@@ -4,6 +4,32 @@ import { archivePolicy } from '../config/archivePolicy.js';
 import { formatBytes, getFileInitial } from '../core/fileTypes.js';
 import { FilePreviewModal } from './FilePreviewModal.jsx';
 
+function triggerBlobDownload(blob, filename) {
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  }, 100);
+}
+
+async function handleFileDownload(file) {
+  try {
+    const response = await fetch(file.downloadUrl);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const blob = await response.blob();
+    triggerBlobDownload(blob, file.filename);
+  } catch {
+    // CORS 차단 시 새 탭으로 열기 (브라우저에서 직접 저장 가능)
+    window.open(file.downloadUrl, '_blank', 'noopener,noreferrer');
+  }
+}
+
 const categories = [
   { id: 'all', label: '전체', Icon: Layers },
   { id: 'image', label: '이미지', Icon: Image },
@@ -214,16 +240,15 @@ export function ArchiveWorkspaceScreen({
                       </span>
                     </button>
                     {file.downloadUrl && (
-                      <a
+                      <button
+                        type="button"
                         className="file-row-download"
-                        href={file.downloadUrl}
-                        download={file.filename}
                         aria-label={`${file.filename} 다운로드`}
                         title="다운로드"
-                        onClick={(event) => event.stopPropagation()}
+                        onClick={(event) => { event.stopPropagation(); handleFileDownload(file); }}
                       >
                         <Download size={16} aria-hidden="true" />
-                      </a>
+                      </button>
                     )}
                   </div>
                 );

@@ -1,33 +1,44 @@
+import { useState } from 'react';
 import { Download, X } from 'lucide-react';
 import { formatBytes } from '../core/fileTypes.js';
 
-function getDownloadUrl({ filename, url }) {
-  const disposition = `attachment; filename="${filename.replace(/"/g, '')}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
-
-  try {
-    const downloadUrl = new URL(url);
-    downloadUrl.searchParams.set('response-content-disposition', disposition);
-    return downloadUrl.toString();
-  } catch (error) {
-    return url;
-  }
+function triggerBlobDownload(blob, filename) {
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  }, 100);
 }
 
-function downloadFile({ filename, url }) {
-  const anchor = document.createElement('a');
-  anchor.href = getDownloadUrl({ filename, url });
-  anchor.download = filename;
-  anchor.rel = 'noopener noreferrer';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
+// Firebase downloadUrl(?alt=media&token=...)은 공개 토큰 URL이므로 fetch() 가능
+async function downloadFile(file) {
+  const response = await fetch(file.downloadUrl);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const blob = await response.blob();
+  triggerBlobDownload(blob, file.filename);
 }
 
 export function FilePreviewModal({ file, onClose }) {
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
+
   const handleDownload = async () => {
     if (!file.downloadUrl) return;
-
-    downloadFile({ filename: file.filename, url: file.downloadUrl });
+    setDownloadError('');
+    setDownloading(true);
+    try {
+      await downloadFile(file);
+    } catch {
+      setDownloadError('다운로드에 실패했습니다.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -56,13 +67,15 @@ export function FilePreviewModal({ file, onClose }) {
 
         <footer>
           <span>{formatBytes(file.size)}</span>
+          {downloadError && <span className="download-error">{downloadError}</span>}
           {file.downloadUrl && (
             <button
               type="button"
               className="download-link download-link-icon"
-              title="다운로드"
+              title={downloading ? '다운로드 중…' : '다운로드'}
               aria-label={`${file.filename} 다운로드`}
               onClick={handleDownload}
+              disabled={downloading}
             >
               <Download size={18} aria-hidden="true" />
             </button>

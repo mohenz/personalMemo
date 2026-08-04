@@ -1,17 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Clipboard,
-  Save, 
-  Image as ImageIcon, 
-  MoreVertical, 
-  Plus, 
-  X, 
+  Save,
+  Image as ImageIcon,
+  MoreVertical,
+  Plus,
+  X,
   Upload,
-  PlusCircle, 
-  CheckSquare, 
+  PlusCircle,
+  CheckSquare,
   Trash2,
-  FolderOpen
+  FolderOpen,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { Note, Group, ChecklistItem } from '../types';
 import { PREMIUM_IMAGES } from '../data';
@@ -41,6 +43,8 @@ export default function NoteEditor({
   const [newTodoText, setNewTodoText] = useState('');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
   const initialSnapshotRef = useRef('');
   const lastAutoSavedSnapshotRef = useRef('');
 
@@ -86,6 +90,20 @@ export default function NoteEditor({
 
     return () => window.clearTimeout(timer);
   }, [autoSaveSnapshot, onAutoSave, title, content, groupId, images, checklist]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      sectionRef.current?.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
   const handleSave = () => {
     onSave(buildNotePayload());
@@ -192,7 +210,7 @@ export default function NoteEditor({
   };
 
   return (
-    <section className="flex-1 bg-background flex flex-col overflow-hidden h-full relative">
+    <section ref={sectionRef} className="flex-1 bg-background flex flex-col overflow-hidden h-full relative">
       
       {/* Editor Top App Bar */}
       <header className="sticky top-0 w-full flex flex-col md:flex-row justify-between gap-3 md:items-center px-4 md:px-6 py-3 md:h-16 z-20 bg-background/95 backdrop-blur-md border-b border-grid-line shadow-sm">
@@ -237,12 +255,20 @@ export default function NoteEditor({
             <span>저장</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setShowImagePicker(true)}
             className="hover:bg-surface-container rounded-full p-2 transition-all text-on-surface-variant cursor-pointer"
             title="이미지 첨부"
           >
             <ImageIcon className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            className="hover:bg-surface-container rounded-full p-2 transition-all text-on-surface-variant cursor-pointer"
+            title={isFullscreen ? '전체화면 나가기 (Esc)' : '전체화면으로 보기'}
+          >
+            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
           </button>
         </div>
       </header>
